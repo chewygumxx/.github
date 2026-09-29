@@ -1,0 +1,59 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/.github/workflows/self-test.yaml
+#
+#
+
+# Runs this repository's composite actions against itself from the working
+# tree, so a change to an action is exercised before a tag publishes it.
+# (The reusable workflows reference the actions by tag and so cannot.)
+
+name: Self Test
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+    workflow_dispatch: {}
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
+
+            - name: Detect
+              id: detect
+              uses: ./actions/detect
+
+            - name: Lint Workflows
+              if: steps.detect.outputs.actions == 'true'
+              uses: ./actions/lint-actions
+
+            - name: Lint Shell Scripts
+              if: steps.detect.outputs.shell == 'true'
+              uses: ./actions/lint-shell
+
+            - name: Lint TOML
+              if: steps.detect.outputs.toml == 'true'
+              uses: ./actions/lint-toml
+
+            - name: Lint EditorConfig
+              if: steps.detect.outputs.editorconfig == 'true'
+              uses: ./actions/lint-editorconfig

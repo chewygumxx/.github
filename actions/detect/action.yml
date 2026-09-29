@@ -18,8 +18,13 @@ outputs:
         description: '"true" when workflows exist under .github/workflows'
         value: ${{ steps.detect.outputs.actions }}
     shell:
-        description: '"true" when sh, bash, dash or ksh scripts are tracked'
+        description: >-
+            "true" when sh, bash, dash or ksh scripts are tracked and shuck is
+            not configured
         value: ${{ steps.detect.outputs.shell }}
+    zsh:
+        description: '"true" when zsh scripts are tracked or shuck is configured'
+        value: ${{ steps.detect.outputs.zsh }}
     toml:
         description: '"true" when TOML files are tracked'
         value: ${{ steps.detect.outputs.toml }}
@@ -32,14 +37,22 @@ runs:
     steps:
         # Presence across the whole repository, not only changed files: a
         # config or tool change can break files the push did not touch.
+        # Symlinks are not counted, as the linters skip them.
         - name: Detect
           id: detect
           shell: bash
           run: |
-              any() { grep -qz . && echo true || echo false; }
+              lib=$GITHUB_ACTION_PATH/../lib
+              # Reads all of its input: grep -q would stop at the first
+              # match and fail the producer with SIGPIPE under pipefail.
+              any() { [ "$(grep -cz .)" -gt 0 ] && echo true || echo false; }
+              shuck=$(git ls-files -z -- .shuck.toml shuck.toml | any)
+              sh=$("$lib/filetype.sh" sh | any)
+              zsh=$("$lib/filetype.sh" zsh | any)
               {
-                  echo "actions=$(git ls-files -z -- '.github/workflows/*.yml' '.github/workflows/*.yaml' | any)"
-                  echo "shell=$("$GITHUB_ACTION_PATH/../lib/shell-files.sh" | any)"
-                  echo "toml=$(git ls-files -z -- '*.toml' | any)"
-                  echo "editorconfig=$(git ls-files -z -- .editorconfig | any)"
+                  echo "actions=$("$lib/tracked.sh" '.github/workflows/*.yml' '.github/workflows/*.yaml' | any)"
+                  echo "shell=$([ "$sh" = true ] && [ "$shuck" = false ] && echo true || echo false)"
+                  echo "zsh=$([ "$zsh" = true ] || [ "$shuck" = true ] && echo true || echo false)"
+                  echo "toml=$("$lib/tracked.sh" '*.toml' | any)"
+                  echo "editorconfig=$("$lib/tracked.sh" .editorconfig | any)"
               } | tee -a "$GITHUB_OUTPUT"

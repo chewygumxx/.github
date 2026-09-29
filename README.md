@@ -10,6 +10,8 @@ Each workflow runs against the calling repository's own `mise.toml`, `package.js
 | ----------------- | ------------------------------------------------------ | -------------------------------------- |
 | `lint.yaml`       | `npm run <script>` (input `script`, default `check`)   | `contents: read`                       |
 | `commitlint.yaml` | commitlint over the pushed or pull request commit range | `contents: read`, `pull-requests: read` |
+| `sync-header-metadata.yaml` | rewrites file headers and commits them | `contents: write` |
+| `sync-repo-metadata.yaml` | applies `.repo-metadata.jsonc` to repository settings | input `client-id`, secret `private-key` |
 
 ```yaml
 jobs:

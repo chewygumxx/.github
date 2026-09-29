@@ -1,0 +1,57 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/.github/workflows/lint.yaml
+#
+#
+
+# Reusable: installs the caller's mise toolchain and npm dependencies, then
+# runs one of its npm scripts. Triggers and concurrency belong to the caller.
+#
+#   jobs:
+#       check:
+#           uses: chewygumxx/.github/.github/workflows/lint.yaml@v1
+
+name: Lint
+
+on:
+    workflow_call:
+        inputs:
+            script:
+                description: npm script to run
+                type: string
+                default: check
+
+permissions:
+    contents: read
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
+
+            - name: Setup Node and NPM
+              uses: jdx/mise-action@v4
+
+            - name: Cache NPM
+              uses: actions/cache@v6
+              with:
+                  path: ~/.npm
+                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+                  restore-keys: npm-${{ runner.os }}-
+
+            - name: NPM Clean Install
+              run: npm ci
+
+            - name: Run Script
+              env:
+                  SCRIPT: ${{ inputs.script }}
+              run: npm run "$SCRIPT"

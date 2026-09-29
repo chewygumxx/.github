@@ -1,0 +1,35 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/actions/lint-toml/action.yml
+#
+#
+
+name: Lint TOML
+description: >-
+    Checks tracked TOML files parse and are formatted, using taplo and any
+    `.taplo.toml` in the repository.
+
+runs:
+    using: composite
+    steps:
+        - name: Setup mise
+          uses: jdx/mise-action@v4
+          with:
+              install: false
+              add_shims_to_path: false
+              working_directory: ${{ github.action_path }}/..
+              cache_key_prefix: chewygumxx-lint
+
+        - name: Install taplo
+          shell: bash
+          run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:tamasfe/taplo'
+
+        - name: Check Formatting
+          shell: bash
+          env:
+              RUST_LOG: warn
+          run: git ls-files -z -- '*.toml' | xargs -0 -r taplo fmt --check --

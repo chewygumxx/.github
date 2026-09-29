@@ -1,0 +1,17 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/.github/actionlint.yaml
+#
+#
+
+paths:
+    # actionlint's bundled metadata for create-github-app-token predates v3,
+    # which added `client-id` and deprecated `app-id`.
+    .github/workflows/sync-repo-metadata.yaml:
+        ignore:
+            - 'input "client-id" is not defined'
+            - 'missing input "app-id"'

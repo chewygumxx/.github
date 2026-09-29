@@ -1,0 +1,77 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=5:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/.github/workflows/sync-repo-metadata.yaml
+#
+#
+
+# Reusable: applies the calling repository's metadata file to its GitHub
+# settings. The caller passes the App credentials explicitly rather than via
+# `secrets: inherit`, so this workflow sees only the one secret it needs.
+#
+#   jobs:
+#       apply:
+#           uses: chewygumxx/.github/.github/workflows/sync-repo-metadata.yaml@v1
+#           with:
+#               client-id: ${{ vars.METADATA_APP_CLIENT_ID }}
+#           secrets:
+#               private-key: ${{ secrets.METADATA_APP_PRIVATE_KEY }}
+
+name: Sync Repository Metadata
+
+on:
+    workflow_call:
+        inputs:
+            client-id:
+                description: Client ID of the metadata GitHub App
+                type: string
+                required: true
+            metadata-path:
+                description: Path to the metadata file
+                type: string
+                default: .repo-metadata.jsonc
+        secrets:
+            private-key:
+                description: Private key of the metadata GitHub App
+                required: true
+
+permissions:
+    contents: read
+
+jobs:
+    apply:
+        runs-on: ubuntu-latest
+        steps:
+            # GITHUB_TOKEN is unable to attain repo administration purview via
+            # workflow permissions. Given this action provides for writing
+            # visibility, merge options, immutable_releases, etc., an
+            # Administration:write-capable token is required. To achieve this,
+            # the requisite token is minted via GitHub App installed on repo/org
+            # instead.
+            #
+            # Register the App via Settings > Developer settings > GitHub Apps,
+            # grant it repository permission "Administration: Read and write",
+            # and install it on the repo(s) that call this workflow. Callers
+            # conventionally store its client ID as the METADATA_APP_CLIENT_ID
+            # variable and its private key as the METADATA_APP_PRIVATE_KEY
+            # secret.
+            - name: Mint App Installation Token
+              id: app-token
+              uses: actions/create-github-app-token@v3
+              with:
+                  client-id: ${{ inputs.client-id }}
+                  private-key: ${{ secrets.private-key }}
+                  permission-administration: write
+
+            - uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
+
+            - name: Apply Metadata
+              uses: chewygumxx/sync-repo-metadata@v2
+              with:
+                  metadata_path: ${{ inputs.metadata-path }}
+                  token: ${{ steps.app-token.outputs.token }}

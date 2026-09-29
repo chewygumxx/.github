@@ -48,7 +48,7 @@ jobs:
 
 Repository-specific jobs such as `check` follow with `needs: standard`. The
 `sha` output is the commit the header sync pushed, if any; the `actions`,
-`shell`, `toml` and `editorconfig` outputs report which kinds of file the
+`shell`, `zsh`, `toml` and `editorconfig` outputs report which kinds of file the
 repository tracks. `cancel-in-progress: false` stops a newer run cancelling the
 header sync part-way through its commit.
 
@@ -78,7 +78,8 @@ job can combine them with its own steps.
 | `actions/detect`            | which kinds of file are tracked, as outputs                  |
 | `actions/lint-actions`      | workflows with actionlint, and their scripts with shellcheck |
 | `actions/lint-shell`        | sh, bash, dash and ksh scripts with shellcheck and shfmt     |
-| `actions/lint-toml`         | TOML formatting with taplo                                   |
+| `actions/lint-zsh`          | zsh scripts with shuck                                       |
+| `actions/lint-toml`         | TOML formatting and lint with tombi                          |
 | `actions/lint-editorconfig` | files against `.editorconfig`, except indent size            |
 
 ```yaml
@@ -90,6 +91,21 @@ steps:
 The linters are pinned in `actions/mise.toml` and installed from there, not from
 the caller's `mise.toml`, so every repository lints with the same versions.
 Dependabot cannot update these pins; bump them by hand or with `mise upgrade`.
+
+Files are sorted into shell families by extension, zsh startup file name,
+shebang, then a vim modeline such as `filetype=zsh`, which catches autoloaded
+zsh functions with no extension. Symlinks are never linted.
+
+A repository with `.shuck.toml` or `shuck.toml` has chosen shuck for every
+shell script: `lint-zsh` then runs shuck over the whole tree, its
+`[per-file-shell]` map decides each file's dialect, and `lint-shell` stands
+aside, since shfmt and shuck format differently. Without one, shuck sees only
+the detected zsh scripts, forced to the zsh dialect.
+
+tombi reads `.tombi.toml`, `tombi.toml` or `[tool.tombi]` in `pyproject.toml`.
+A repository with none is checked against the house style in
+`actions/lint-toml/.tombi.toml`, copied from `chewygumxx/nvim-config`. Both
+tombi commands run `--offline`, so schemas come only from tombi's cache.
 
 editorconfig-checker skips indent size by default: YAML sequences, Markdown list
 continuations and verbatim licence text all break it, and formatters already

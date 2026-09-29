@@ -1,0 +1,37 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/actions/config/yamllint.yaml
+#
+#
+
+# https://yamllint.readthedocs.io/en/stable/configuration.html
+#
+# The house style. `lib/yaml.sh` names this file in `YAMLLINT_CONFIG_FILE`,
+# which yamllint reads only when the checked repository has no `.yamllint`,
+# `.yamllint.yaml` or `.yamllint.yml` of its own.
+#
+# prettier owns layout, so only the rules that disagree with its output, or
+# with how these repositories write YAML, are relaxed from the defaults.
+
+extends: default
+
+rules:
+    # prettier puts one space before a trailing comment.
+    comments:
+        min-spaces-from-content: 1
+
+    # Files open with a vim modeline and licence comment, not `---`.
+    document-start: disable
+
+    # Strings, URLs and expressions cannot be wrapped; editorconfig-checker
+    # enforces a `max_line_length` where a repository sets one.
+    line-length: disable
+
+    # `on:` is a workflow key, not a boolean. Truthy values are still
+    # reported.
+    truthy:
+        check-keys: false

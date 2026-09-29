@@ -1,0 +1,142 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/.github/workflows/standard.yaml
+#
+#
+
+# Reusable: the checks every repository runs, behind one reference.
+#
+#   commitlint     lints the pushed or pull request commit messages
+#   header-sync    rewrites file headers and commits them
+#   lint-format    generic lint and format checks, after header-sync and
+#                  against the commit it pushed
+#   metadata-sync  applies .repo-metadata.jsonc to the repository settings on
+#                  every push to the default branch and on workflow_dispatch,
+#                  so it fails visibly while the App secret or variable is
+#                  wrong, and can be re-run by dispatch once they are fixed
+#
+# Each part can be switched off with its boolean input. The caller grants the
+# union of the permissions below; each job narrows its own. Use
+# `cancel-in-progress: false` in the caller, so a newer run cannot cancel
+# header-sync part-way through its commit.
+#
+#   permissions:
+#       contents: write
+#       pull-requests: read
+#
+#   jobs:
+#       standard:
+#           uses: chewygumxx/.github/.github/workflows/standard.yaml@v1
+#           with:
+#               metadata-client-id: ${{ vars.METADATA_APP_CLIENT_ID }}
+#           secrets:
+#               metadata-private-key: ${{ secrets.METADATA_APP_PRIVATE_KEY }}
+#
+# Repository-specific jobs can follow with `needs: standard` and check out
+# `needs.standard.outputs.sha` to see the synced headers.
+
+name: Standard
+
+on:
+    workflow_call:
+        inputs:
+            commitlint:
+                description: Lint commit messages
+                type: boolean
+                default: true
+            header-sync:
+                description: Sync file headers
+                type: boolean
+                default: true
+            lint-format:
+                description: Run generic lint and format checks
+                type: boolean
+                default: true
+            metadata-sync:
+                description: Apply .repo-metadata.jsonc to repository settings
+                type: boolean
+                default: true
+            metadata-client-id:
+                description: Client ID of the metadata GitHub App
+                type: string
+                default: ""
+            metadata-path:
+                description: Path to the metadata file
+                type: string
+                default: .repo-metadata.jsonc
+            editorconfig-args:
+                description: Arguments for editorconfig-checker
+                type: string
+                default: -disable-indent-size
+        secrets:
+            metadata-private-key:
+                description: Private key of the metadata GitHub App
+                required: false
+        outputs:
+            sha:
+                description: >-
+                    Commit pushed by header-sync, or empty when it pushed
+                    nothing; pass to actions/checkout as `ref`.
+                value: ${{ jobs.header-sync.outputs.sha }}
+            actions:
+                description: '"true" when workflows are tracked'
+                value: ${{ jobs.lint-format.outputs.actions }}
+            shell:
+                description: '"true" when shell scripts are tracked'
+                value: ${{ jobs.lint-format.outputs.shell }}
+            toml:
+                description: '"true" when TOML files are tracked'
+                value: ${{ jobs.lint-format.outputs.toml }}
+            editorconfig:
+                description: '"true" when .editorconfig is tracked'
+                value: ${{ jobs.lint-format.outputs.editorconfig }}
+
+permissions:
+    contents: read
+
+jobs:
+    commitlint:
+        if: inputs.commitlint
+        permissions:
+            contents: read
+            pull-requests: read
+        uses: chewygumxx/.github/.github/workflows/commitlint.yaml@v1
+
+    header-sync:
+        if: inputs.header-sync
+        permissions:
+            contents: write
+        uses: chewygumxx/.github/.github/workflows/sync-header-metadata.yaml@v1
+
+    # Runs whether header-sync succeeded, failed (e.g. a fork's pull request
+    # cannot be pushed to) or was switched off; only its ordering matters.
+    lint-format:
+        needs: header-sync
+        if: ${{ !cancelled() && inputs.lint-format }}
+        permissions:
+            contents: read
+        uses: chewygumxx/.github/.github/workflows/lint-format.yaml@v1
+        with:
+            ref: ${{ needs.header-sync.outputs.sha }}
+            editorconfig-args: ${{ inputs.editorconfig-args }}
+
+    metadata-sync:
+        if: >-
+            inputs.metadata-sync && (
+                github.event_name == 'workflow_dispatch' || (
+                    github.event_name == 'push' &&
+                    github.ref_name == github.event.repository.default_branch
+                )
+            )
+        permissions:
+            contents: read
+        uses: chewygumxx/.github/.github/workflows/sync-repo-metadata.yaml@v1
+        with:
+            client-id: ${{ inputs.metadata-client-id }}
+            metadata-path: ${{ inputs.metadata-path }}
+        secrets:
+            private-key: ${{ secrets.metadata-private-key }}

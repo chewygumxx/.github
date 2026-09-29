@@ -24,6 +24,10 @@ on:
                 description: npm script to run
                 type: string
                 default: check
+            ref:
+                description: Commit to check out; empty for the triggering commit
+                type: string
+                default: ""
 
 permissions:
     contents: read
@@ -36,6 +40,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v7
               with:
+                  ref: ${{ inputs.ref }}
                   persist-credentials: false
 
             - name: Setup Node and NPM

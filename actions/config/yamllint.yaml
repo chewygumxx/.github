@@ -12,7 +12,8 @@
 #
 # The house style. `lib/yaml.sh` names this file in `YAMLLINT_CONFIG_FILE`,
 # which yamllint reads only when the checked repository has no `.yamllint`,
-# `.yamllint.yaml` or `.yamllint.yml` of its own.
+# `.yamllint.yaml` or `.yamllint.yml` of its own. It is an identical copy of
+# `@chewygumxx/yamllint-config`, which repositories use for local checks.
 #
 # prettier owns layout, so only the rules that disagree with its output, or
 # with how these repositories write YAML, are relaxed from the defaults.

@@ -10,9 +10,10 @@
 #
 
 # Checks formatting and lints every tracked TOML file with tombi, offline,
-# as chewygumxx/nvim-config does. tombi reads its configuration from the
-# working directory, so a repository without one of its own is checked from
-# `actions/lint-toml`, whose `.tombi.toml` is the house style.
+# as chewygumxx/nvim-config does. tombi has no option naming a configuration
+# file, but it falls back to a user-level one under `XDG_CONFIG_HOME`: that is
+# pointed at `actions/config`, whose `tombi/config.toml` is the house style,
+# and a configuration in the repository still takes precedence.
 
 set -euo pipefail
 
@@ -21,12 +22,7 @@ lib=$(cd "$(dirname "$0")" && pwd)
 mapfile -d '' files < <("$lib/tracked.sh" '*.toml')
 ((${#files[@]})) || exit 0
 
-if [ -z "$(git ls-files -- tombi.toml .tombi.toml)" ] &&
-    ! grep -qs '^\[tool\.tombi' pyproject.toml; then
-    echo "No tombi configuration in the repository; using the house style."
-    files=("${files[@]/#/$PWD/}")
-    cd "$lib/../lint-toml"
-fi
+export XDG_CONFIG_HOME=$lib/../config
 
 status=0
 tombi format --check --diff --offline -- "${files[@]}" || status=1

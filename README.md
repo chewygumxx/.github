@@ -102,9 +102,12 @@ shell script: `lint-zsh` then runs shuck over the whole tree, its
 aside, since shfmt and shuck format differently. Without one, shuck sees only
 the detected zsh scripts, forced to the zsh dialect.
 
-tombi reads `.tombi.toml`, `tombi.toml` or `[tool.tombi]` in `pyproject.toml`.
-A repository with none is checked against the house style in
-`actions/lint-toml/.tombi.toml`, copied from `chewygumxx/nvim-config`. Both
+A repository needs no tombi configuration of its own. `lint-toml` points
+`XDG_CONFIG_HOME` at `actions/config`, so tombi takes the house style in
+`actions/config/tombi/config.toml`, copied from `chewygumxx/nvim-config`, as its
+user-level configuration. A `.tombi.toml`, `tombi.toml`, `.config/tombi.toml` or
+`[tool.tombi]` in the repository still takes precedence. Copy the house style to
+`~/.config/tombi/config.toml` to have the editor and a local `tombi` agree. Both
 tombi commands run `--offline`, so schemas come only from tombi's cache.
 
 editorconfig-checker skips indent size by default: YAML sequences, Markdown list

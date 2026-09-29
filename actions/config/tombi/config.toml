@@ -4,15 +4,16 @@
 #
 #
 # ~chewygumxx/.github.git
-# ::: :/actions/lint-toml/.tombi.toml
+# ::: :/actions/config/tombi/config.toml
 #
 #
 
 # https://tombi-toml.github.io/tombi/docs/configuration
 #
-# The house style, copied from chewygumxx/nvim-config. Used only for a
-# repository with no tombi configuration of its own; tombi reads its
-# configuration from the working directory, so the action runs from here.
+# The house style, copied from chewygumxx/nvim-config. `lib/tombi.sh`
+# points `XDG_CONFIG_HOME` here, so tombi reads this as its user-level
+# configuration: any `.tombi.toml`, `tombi.toml`, `.config/tombi.toml` or
+# `[tool.tombi]` in the checked repository takes precedence over it.
 
 toml-version = "v1.1.0"
 

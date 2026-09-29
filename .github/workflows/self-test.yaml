@@ -50,6 +50,10 @@ jobs:
               if: steps.detect.outputs.shell == 'true'
               uses: ./actions/lint-shell
 
+            - name: Lint Zsh
+              if: steps.detect.outputs.zsh == 'true'
+              uses: ./actions/lint-zsh
+
             - name: Lint TOML
               if: steps.detect.outputs.toml == 'true'
               uses: ./actions/lint-toml

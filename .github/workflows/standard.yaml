@@ -86,8 +86,11 @@ on:
                 description: '"true" when workflows are tracked'
                 value: ${{ jobs.lint-format.outputs.actions }}
             shell:
-                description: '"true" when shell scripts are tracked'
+                description: '"true" when sh or bash scripts are tracked and shuck is not configured'
                 value: ${{ jobs.lint-format.outputs.shell }}
+            zsh:
+                description: '"true" when zsh scripts are tracked or shuck is configured'
+                value: ${{ jobs.lint-format.outputs.zsh }}
             toml:
                 description: '"true" when TOML files are tracked'
                 value: ${{ jobs.lint-format.outputs.toml }}

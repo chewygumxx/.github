@@ -1,0 +1,150 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/.github/workflows/lint-format.yaml
+#
+#
+
+# Reusable: repository-agnostic linting and format checks, one job per kind
+# of file. A job runs only when its kind of file is tracked; a job skipped by
+# its condition still satisfies a required status check. Tools are pinned in
+# this repository's `actions/mise.toml`, independent of the caller's.
+#
+# Linters a repository pins itself (Biome, remark, commitlint via npm) are
+# left to that repository's own checks, so CI and local hooks agree.
+#
+#   jobs:
+#       lint-format:
+#           uses: chewygumxx/.github/.github/workflows/lint-format.yaml@v1
+
+name: Lint and Format
+
+on:
+    workflow_call:
+        inputs:
+            ref:
+                description: Commit to check out; empty for the triggering commit
+                type: string
+                default: ""
+            actions:
+                description: Lint workflows with actionlint
+                type: boolean
+                default: true
+            shell:
+                description: Lint shell scripts with shellcheck and shfmt
+                type: boolean
+                default: true
+            toml:
+                description: Check TOML formatting with taplo
+                type: boolean
+                default: true
+            editorconfig:
+                description: Check files against .editorconfig
+                type: boolean
+                default: true
+            editorconfig-args:
+                description: Arguments for editorconfig-checker
+                type: string
+                default: -disable-indent-size
+        outputs:
+            actions:
+                description: '"true" when workflows are tracked'
+                value: ${{ jobs.detect.outputs.actions }}
+            shell:
+                description: '"true" when shell scripts are tracked'
+                value: ${{ jobs.detect.outputs.shell }}
+            toml:
+                description: '"true" when TOML files are tracked'
+                value: ${{ jobs.detect.outputs.toml }}
+            editorconfig:
+                description: '"true" when .editorconfig is tracked'
+                value: ${{ jobs.detect.outputs.editorconfig }}
+
+permissions:
+    contents: read
+
+jobs:
+    detect:
+        runs-on: ubuntu-latest
+
+        outputs:
+            actions: ${{ steps.detect.outputs.actions }}
+            shell: ${{ steps.detect.outputs.shell }}
+            toml: ${{ steps.detect.outputs.toml }}
+            editorconfig: ${{ steps.detect.outputs.editorconfig }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
+                  persist-credentials: false
+
+            - name: Detect
+              id: detect
+              uses: chewygumxx/.github/actions/detect@v1
+
+    actions:
+        needs: detect
+        if: inputs.actions && needs.detect.outputs.actions == 'true'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
+                  persist-credentials: false
+
+            - name: Lint Workflows
+              uses: chewygumxx/.github/actions/lint-actions@v1
+
+    shell:
+        needs: detect
+        if: inputs.shell && needs.detect.outputs.shell == 'true'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
+                  persist-credentials: false
+
+            - name: Lint Shell Scripts
+              uses: chewygumxx/.github/actions/lint-shell@v1
+
+    toml:
+        needs: detect
+        if: inputs.toml && needs.detect.outputs.toml == 'true'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
+                  persist-credentials: false
+
+            - name: Lint TOML
+              uses: chewygumxx/.github/actions/lint-toml@v1
+
+    editorconfig:
+        needs: detect
+        if: inputs.editorconfig && needs.detect.outputs.editorconfig == 'true'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
+                  persist-credentials: false
+
+            - name: Lint EditorConfig
+              uses: chewygumxx/.github/actions/lint-editorconfig@v1
+              with:
+                  args: ${{ inputs.editorconfig-args }}

@@ -14,7 +14,8 @@
 # this repository's `actions/mise.toml`, independent of the caller's.
 #
 # Linters a repository pins itself (Biome, remark, commitlint via npm) are
-# left to that repository's own checks, so CI and local hooks agree.
+# left to that repository's own checks, so CI and local hooks agree. YAML is
+# checked here because Biome does not read it.
 #
 #   jobs:
 #       lint-format:
@@ -45,6 +46,10 @@ on:
                 description: Lint and check TOML formatting with tombi
                 type: boolean
                 default: true
+            yaml:
+                description: Check YAML formatting with prettier and lint it with yamllint
+                type: boolean
+                default: true
             editorconfig:
                 description: Check files against .editorconfig
                 type: boolean
@@ -66,6 +71,9 @@ on:
             toml:
                 description: '"true" when TOML files are tracked'
                 value: ${{ jobs.detect.outputs.toml }}
+            yaml:
+                description: '"true" when YAML files are tracked'
+                value: ${{ jobs.detect.outputs.yaml }}
             editorconfig:
                 description: '"true" when .editorconfig is tracked'
                 value: ${{ jobs.detect.outputs.editorconfig }}
@@ -82,6 +90,7 @@ jobs:
             shell: ${{ steps.detect.outputs.shell }}
             zsh: ${{ steps.detect.outputs.zsh }}
             toml: ${{ steps.detect.outputs.toml }}
+            yaml: ${{ steps.detect.outputs.yaml }}
             editorconfig: ${{ steps.detect.outputs.editorconfig }}
 
         steps:
@@ -154,6 +163,21 @@ jobs:
 
             - name: Lint TOML
               uses: chewygumxx/.github/actions/lint-toml@v1
+
+    yaml:
+        needs: detect
+        if: inputs.yaml && needs.detect.outputs.yaml == 'true'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
+                  persist-credentials: false
+
+            - name: Lint YAML
+              uses: chewygumxx/.github/actions/lint-yaml@v1
 
     editorconfig:
         needs: detect

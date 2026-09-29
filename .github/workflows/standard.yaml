@@ -94,6 +94,9 @@ on:
             toml:
                 description: '"true" when TOML files are tracked'
                 value: ${{ jobs.lint-format.outputs.toml }}
+            yaml:
+                description: '"true" when YAML files are tracked'
+                value: ${{ jobs.lint-format.outputs.yaml }}
             editorconfig:
                 description: '"true" when .editorconfig is tracked'
                 value: ${{ jobs.lint-format.outputs.editorconfig }}

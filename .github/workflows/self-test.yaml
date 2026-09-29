@@ -58,6 +58,10 @@ jobs:
               if: steps.detect.outputs.toml == 'true'
               uses: ./actions/lint-toml
 
+            - name: Lint YAML
+              if: steps.detect.outputs.yaml == 'true'
+              uses: ./actions/lint-yaml
+
             - name: Lint EditorConfig
               if: steps.detect.outputs.editorconfig == 'true'
               uses: ./actions/lint-editorconfig

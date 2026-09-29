@@ -28,6 +28,9 @@ outputs:
     toml:
         description: '"true" when TOML files are tracked'
         value: ${{ steps.detect.outputs.toml }}
+    yaml:
+        description: '"true" when YAML files are tracked'
+        value: ${{ steps.detect.outputs.yaml }}
     editorconfig:
         description: '"true" when an .editorconfig is tracked at the root'
         value: ${{ steps.detect.outputs.editorconfig }}
@@ -54,5 +57,6 @@ runs:
                   echo "shell=$([ "$sh" = true ] && [ "$shuck" = false ] && echo true || echo false)"
                   echo "zsh=$([ "$zsh" = true ] || [ "$shuck" = true ] && echo true || echo false)"
                   echo "toml=$("$lib/tracked.sh" '*.toml' | any)"
+                  echo "yaml=$("$lib/tracked.sh" '*.yaml' '*.yml' | any)"
                   echo "editorconfig=$("$lib/tracked.sh" .editorconfig | any)"
               } | tee -a "$GITHUB_OUTPUT"

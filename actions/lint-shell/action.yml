@@ -11,12 +11,24 @@
 name: Lint Shell Scripts
 description: >-
     Runs shellcheck and checks shfmt formatting over tracked sh, bash, dash
-    and ksh scripts. shfmt takes its style from `.editorconfig`.
+    and ksh scripts. shfmt takes its style from `.editorconfig`. Skipped when
+    the repository configures shuck, which then owns every shell script (see
+    lint-zsh); the two formatters disagree.
 
 runs:
     using: composite
     steps:
+        - name: Scope
+          id: scope
+          shell: bash
+          run: |
+              if [ -n "$(git ls-files -- .shuck.toml shuck.toml)" ]; then
+                  echo "::notice::shuck is configured; it lints this repository's shell scripts."
+                  echo "skip=true" >> "$GITHUB_OUTPUT"
+              fi
+
         - name: Setup mise
+          if: steps.scope.outputs.skip != 'true'
           uses: jdx/mise-action@v4
           with:
               install: false
@@ -25,13 +37,16 @@ runs:
               cache_key_prefix: chewygumxx-lint
 
         - name: Install shellcheck and shfmt
+          if: steps.scope.outputs.skip != 'true'
           shell: bash
           run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:koalaman/shellcheck aqua:mvdan/sh'
 
         - name: Lint
+          if: steps.scope.outputs.skip != 'true'
           shell: bash
-          run: '"$GITHUB_ACTION_PATH/../lib/shell-files.sh" | xargs -0 -r shellcheck --'
+          run: '"$GITHUB_ACTION_PATH/../lib/filetype.sh" sh | xargs -0 -r shellcheck --'
 
         - name: Check Formatting
+          if: steps.scope.outputs.skip != 'true'
           shell: bash
-          run: '"$GITHUB_ACTION_PATH/../lib/shell-files.sh" | xargs -0 -r shfmt --diff --'
+          run: '"$GITHUB_ACTION_PATH/../lib/filetype.sh" sh | xargs -0 -r shfmt --diff --'

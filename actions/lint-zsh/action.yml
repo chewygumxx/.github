@@ -1,0 +1,33 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/actions/lint-zsh/action.yml
+#
+#
+
+name: Lint Zsh
+description: >-
+    Lints and checks the formatting of zsh scripts with shuck. With a shuck
+    configuration in the repository, shuck covers every shell script instead.
+
+runs:
+    using: composite
+    steps:
+        - name: Setup mise
+          uses: jdx/mise-action@v4
+          with:
+              install: false
+              add_shims_to_path: false
+              working_directory: ${{ github.action_path }}/..
+              cache_key_prefix: chewygumxx-lint
+
+        - name: Install shuck
+          shell: bash
+          run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" github:ewhauser/shuck'
+
+        - name: Lint and Check Formatting
+          shell: bash
+          run: '"$GITHUB_ACTION_PATH/../lib/shuck.sh"'

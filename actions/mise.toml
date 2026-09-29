@@ -23,3 +23,5 @@
 "aqua:rhysd/actionlint"                          = "1.7.12"
 "aqua:tombi-toml/tombi"                          = "1.5.5"
 
+# The release assets are named shuck-cli-*, so the binary is named here.
+"github:ewhauser/shuck" = { version = "0.2.3", exe = "shuck" }

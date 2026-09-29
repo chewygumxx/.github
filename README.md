@@ -7,7 +7,8 @@ Shared GitHub configuration for `chewygumxx` repositories.
 Most repositories need only `standard.yaml`. It lints commit messages, syncs
 file headers, then runs the generic lint and format checks against the synced
 commit, and applies `.repo-metadata.jsonc` on every push to the default branch
-or `workflow_dispatch`. Each part has a boolean input to switch it off, such as
+or `workflow_dispatch`, refusing a file whose `slug` names another
+repository. Each part has a boolean input to switch it off, such as
 `metadata-sync: false` for a repository without the metadata App.
 
 ```yaml

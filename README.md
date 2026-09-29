@@ -6,12 +6,12 @@ Shared GitHub configuration for `chewygumxx` repositories.
 
 Each workflow runs against the calling repository's own `mise.toml`, `package.json` and configs, so CI checks the same rules as that repository's local hooks. Triggers, `permissions` and `concurrency` belong to the caller.
 
-| Workflow          | Runs                                                   | Caller needs                           |
-| ----------------- | ------------------------------------------------------ | -------------------------------------- |
-| `lint.yaml`       | `npm run <script>` (input `script`, default `check`)   | `contents: read`                       |
-| `commitlint.yaml` | commitlint over the pushed or pull request commit range | `contents: read`, `pull-requests: read` |
-| `sync-header-metadata.yaml` | rewrites file headers and commits them | `contents: write` |
-| `sync-repo-metadata.yaml` | applies `.repo-metadata.jsonc` to repository settings | input `client-id`, secret `private-key` |
+| Workflow                    | Runs                                                    | Caller needs                            |
+| --------------------------- | ------------------------------------------------------- | --------------------------------------- |
+| `lint.yaml`                 | `npm run <script>` (input `script`, default `check`)    | `contents: read`                        |
+| `commitlint.yaml`           | commitlint over the pushed or pull request commit range | `contents: read`, `pull-requests: read` |
+| `sync-header-metadata.yaml` | rewrites file headers and commits them                  | `contents: write`                       |
+| `sync-repo-metadata.yaml`   | applies `.repo-metadata.jsonc` to repository settings   | input `client-id`, secret `private-key` |
 
 ```yaml
 jobs:

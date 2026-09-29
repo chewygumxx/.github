@@ -1,0 +1,37 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/actions/lint-shell/action.yml
+#
+#
+
+name: Lint Shell Scripts
+description: >-
+    Runs shellcheck and checks shfmt formatting over tracked sh, bash, dash
+    and ksh scripts. shfmt takes its style from `.editorconfig`.
+
+runs:
+    using: composite
+    steps:
+        - name: Setup mise
+          uses: jdx/mise-action@v4
+          with:
+              install: false
+              add_shims_to_path: false
+              working_directory: ${{ github.action_path }}/..
+              cache_key_prefix: chewygumxx-lint
+
+        - name: Install shellcheck and shfmt
+          shell: bash
+          run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:koalaman/shellcheck aqua:mvdan/sh'
+
+        - name: Lint
+          shell: bash
+          run: '"$GITHUB_ACTION_PATH/../lib/shell-files.sh" | xargs -0 -r shellcheck --'
+
+        - name: Check Formatting
+          shell: bash
+          run: '"$GITHUB_ACTION_PATH/../lib/shell-files.sh" | xargs -0 -r shfmt --diff --'

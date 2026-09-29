@@ -48,8 +48,8 @@ jobs:
 
 Repository-specific jobs such as `check` follow with `needs: standard`. The
 `sha` output is the commit the header sync pushed, if any; the `actions`,
-`shell`, `zsh`, `toml` and `editorconfig` outputs report which kinds of file the
-repository tracks. `cancel-in-progress: false` stops a newer run cancelling the
+`shell`, `zsh`, `toml`, `yaml` and `editorconfig` outputs report which kinds of
+file the repository tracks. `cancel-in-progress: false` stops a newer run cancelling the
 header sync part-way through its commit.
 
 ## Reusable workflows
@@ -80,6 +80,7 @@ job can combine them with its own steps.
 | `actions/lint-shell`        | sh, bash, dash and ksh scripts with shellcheck and shfmt     |
 | `actions/lint-zsh`          | zsh scripts with shuck                                       |
 | `actions/lint-toml`         | TOML formatting and lint with tombi                          |
+| `actions/lint-yaml`         | YAML formatting with prettier, and lint with yamllint        |
 | `actions/lint-editorconfig` | files against `.editorconfig`, except indent size            |
 
 ```yaml
@@ -109,6 +110,13 @@ user-level configuration. A `.tombi.toml`, `tombi.toml`, `.config/tombi.toml` or
 `[tool.tombi]` in the repository still takes precedence. Copy the house style to
 `~/.config/tombi/config.toml` to have the editor and a local `tombi` agree. Both
 tombi commands run `--offline`, so schemas come only from tombi's cache.
+
+Biome does not read YAML, so `lint-yaml` checks it with prettier and yamllint,
+as `chewygumxx/nvim-config` does. Neither needs configuring either: prettier's
+defaults take indentation from `.editorconfig`, and yamllint is given the house
+style in `actions/config/yamllint.yaml` through `YAMLLINT_CONFIG_FILE`, which it
+reads only when the repository has no `.yamllint` of its own. A repository's own
+prettier configuration applies as usual.
 
 editorconfig-checker skips indent size by default: YAML sequences, Markdown list
 continuations and verbatim licence text all break it, and formatters already

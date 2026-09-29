@@ -10,8 +10,8 @@
 
 name: Lint TOML
 description: >-
-    Checks tracked TOML files parse and are formatted, using taplo and any
-    `.taplo.toml` in the repository.
+    Checks formatting and lints tracked TOML files with tombi, offline. Uses
+    the repository's tombi configuration, or the house style without one.
 
 runs:
     using: composite
@@ -24,12 +24,10 @@ runs:
               working_directory: ${{ github.action_path }}/..
               cache_key_prefix: chewygumxx-lint
 
-        - name: Install taplo
+        - name: Install tombi
           shell: bash
-          run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:tamasfe/taplo'
+          run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:tombi-toml/tombi'
 
-        - name: Check Formatting
+        - name: Lint and Check Formatting
           shell: bash
-          env:
-              RUST_LOG: warn
-          run: git ls-files -z -- '*.toml' | xargs -0 -r taplo fmt --check --
+          run: '"$GITHUB_ACTION_PATH/../lib/tombi.sh"'

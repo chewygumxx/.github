@@ -1,0 +1,27 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/actions/lint-toml/.tombi.toml
+#
+#
+
+# https://tombi-toml.github.io/tombi/docs/configuration
+#
+# The house style, copied from chewygumxx/nvim-config. Used only for a
+# repository with no tombi configuration of its own; tombi reads its
+# configuration from the working directory, so the action runs from here.
+
+toml-version = "v1.1.0"
+
+[format]
+[format.rules]
+array-bracket-space-width       = 1
+date-time-delimiter             = "space"
+group-blank-lines-limit         = 2
+indent-width                    = 4
+key-value-equals-sign-alignment = true
+trailing-comment-alignment      = true
+trailing-comment-space-width    = 2

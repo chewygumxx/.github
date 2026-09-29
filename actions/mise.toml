@@ -12,12 +12,14 @@
 # Linters for the composite actions beside this file. Each action installs
 # only its own tools from here, with this directory as mise's working
 # directory, so the calling repository's `mise.toml` is never consulted and
-# every caller lints with the same versions.
+# every caller lints with the same versions. Versions follow
+# chewygumxx/nvim-config and chewygumxx/zsh-config.
 #
 
 [tools]
 "aqua:editorconfig-checker/editorconfig-checker" = "4.0.2"
-"aqua:koalaman/shellcheck" = "0.11.0"
-"aqua:mvdan/sh" = "3.14.1"
-"aqua:rhysd/actionlint" = "1.7.12"
-"aqua:tamasfe/taplo" = "0.10.0"
+"aqua:koalaman/shellcheck"                       = "0.11.0"
+"aqua:mvdan/sh"                                  = "3.14.1"
+"aqua:rhysd/actionlint"                          = "1.7.12"
+"aqua:tombi-toml/tombi"                          = "1.5.5"
+

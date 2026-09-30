@@ -13,20 +13,24 @@
 #
 # A repository with a shuck configuration has chosen shuck for every shell
 # script, so shuck runs over the whole tree and its `[per-file-shell]` map
-# decides each file's dialect, as chewygumxx/zsh-config does. Otherwise only
-# the detected zsh scripts are passed, forced to the zsh dialect: shuck's own
+# decides each file's dialect, as chewygumxx/zsh-config does. Its walk skips a
+# file with no extension and no shebang, such as an autoloaded function, even
+# when the map names it, so the detected zsh scripts are passed as well: shuck
+# reads a file it is named, and lints each file once. Otherwise only the
+# detected zsh scripts are passed, forced to the zsh dialect: shuck's own
 # detection can misread a `.plugin.zsh` file as sh.
 
 set -euo pipefail
 
 lib=$(cd "$(dirname "$0")" && pwd)
 
+mapfile -d '' files < <("$lib/filetype.sh" zsh)
+
 status=0
 if [ -n "$(git ls-files -- .shuck.toml shuck.toml)" ]; then
-    shuck check --output-format github || status=1
-    shuck format --diff || status=1
+    shuck check --output-format github -- . "${files[@]}" || status=1
+    shuck format --diff -- . "${files[@]}" || status=1
 else
-    mapfile -d '' files < <("$lib/filetype.sh" zsh)
     ((${#files[@]})) || exit 0
     zsh=(--config 'per-file-shell = { "**" = "zsh" }')
     shuck "${zsh[@]}" check --output-format github -- "${files[@]}" || status=1

@@ -56,6 +56,12 @@ on:
                 description: Run generic lint and format checks
                 type: boolean
                 default: true
+            yaml:
+                description: >-
+                    Check YAML with prettier and yamllint in lint-format; turn
+                    off where the repository's own checks lint it
+                type: boolean
+                default: true
             metadata-sync:
                 description: Apply .repo-metadata.jsonc to repository settings
                 type: boolean
@@ -129,6 +135,7 @@ jobs:
         with:
             ref: ${{ needs.header-sync.outputs.sha }}
             editorconfig-args: ${{ inputs.editorconfig-args }}
+            yaml: ${{ inputs.yaml }}
 
     metadata-sync:
         if: >-

@@ -101,8 +101,10 @@ zsh functions with no extension. Symlinks are never linted.
 A repository with `.shuck.toml` or `shuck.toml` has chosen shuck for every
 shell script: `lint-zsh` then runs shuck over the whole tree, its
 `[per-file-shell]` map decides each file's dialect, and `lint-shell` stands
-aside, since shfmt and shuck format differently. Without one, shuck sees only
-the detected zsh scripts, forced to the zsh dialect.
+aside, since shfmt and shuck format differently. Shuck's walk skips a file with
+no extension and no shebang, such as an autoloaded function, so the detected zsh
+scripts are passed to it as well. Without a configuration, shuck sees only the
+detected zsh scripts, forced to the zsh dialect.
 
 A repository needs no tombi configuration of its own. `lint-toml` points
 `XDG_CONFIG_HOME` at `actions/config`, so tombi takes the house style in

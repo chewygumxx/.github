@@ -57,17 +57,19 @@ header sync part-way through its commit.
 
 Triggers, `permissions` and `concurrency` belong to the caller.
 
-| Workflow                    | Runs                                                    | Caller needs                            |
-| --------------------------- | ------------------------------------------------------- | --------------------------------------- |
-| `standard.yaml`             | all of the below except `lint.yaml`                     | the union of the below                  |
-| `commitlint.yaml`           | commitlint over the pushed or pull request commit range | `contents: read`, `pull-requests: read` |
-| `sync-header-metadata.yaml` | rewrites file headers and commits them; outputs `sha`   | `contents: write`                       |
-| `sync-repo-metadata.yaml`   | applies `.repo-metadata.jsonc` to repository settings   | input `client-id`, secret `private-key` |
-| `lint-format.yaml`          | the composite actions below, one job per kind of file   | `contents: read`                        |
-| `lint.yaml`                 | the repository's `npm run <script>`, default `check`    | `contents: read`                        |
+| Workflow                    | Runs                                                                                             | Caller needs                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------- |
+| `standard.yaml`             | all of the below except `lint.yaml`                                                              | the union of the below                  |
+| `commitlint.yaml`           | commitlint over the pushed or pull request commit range                                          | `contents: read`, `pull-requests: read` |
+| `sync-header-metadata.yaml` | rewrites file headers and commits them; outputs `sha`                                            | `contents: write`                       |
+| `sync-repo-metadata.yaml`   | applies `.repo-metadata.jsonc` to repository settings                                            | input `client-id`, secret `private-key` |
+| `lint-format.yaml`          | the composite actions below, one job per kind of file                                            | `contents: read`                        |
+| `lint.yaml`                 | the repository's `bun run <script>` or `npm run <script>`, as its lockfile says, default `check` | `contents: read`                        |
 
-`commitlint.yaml` and `lint.yaml` run the calling repository's own npm
-dependencies and configs, so CI checks the same rules as its local hooks.
+`commitlint.yaml` and `lint.yaml` run the calling repository's own
+dependencies and configs, installed with Bun when it holds `bun.lock` and npm
+when it holds `package-lock.json`, so CI checks the same rules as its local
+hooks.
 
 ## Composite actions
 
@@ -121,7 +123,8 @@ style in `actions/config/yamllint.yaml` through `YAMLLINT_CONFIG_FILE`, which it
 reads only when the repository has no `.yamllint` of its own. A repository's own
 prettier configuration applies as usual. A `.yamllint` that extends a file from
 `node_modules` cannot load here, where nothing is installed; such a repository
-lints YAML in its own npm scripts and passes `yaml: false` to `standard.yaml`.
+lints YAML in its own package scripts and passes `yaml: false` to
+`standard.yaml`.
 
 editorconfig-checker skips indent size by default: YAML sequences, Markdown list
 continuations and verbatim licence text all break it, and formatters already

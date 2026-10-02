@@ -8,9 +8,11 @@
 #
 #
 
-# Reusable: lints the commits a push or pull request introduces against the
-# caller's own commitlint config. Triggers and concurrency belong to the
-# caller; the `github` context seen here is the caller's event.
+# Reusable: installs the caller's mise toolchain and its packages, with Bun
+# or npm as its lockfile says, then lints the commits a push or pull request
+# introduces against the caller's own commitlint config. Triggers and
+# concurrency belong to the caller; the `github` context seen here is the
+# caller's event.
 #
 #   jobs:
 #       commitlint:
@@ -36,35 +38,72 @@ jobs:
                   fetch-depth: 0
                   persist-credentials: false
 
-            - name: Setup Node and NPM
+            - name: Setup Toolchain
               uses: jdx/mise-action@v4
 
-            - name: Cache NPM
+            # bun.lock means Bun; package-lock.json means npm. Both, or
+            # neither, is an error, not a guess.
+            - name: Detect Package Manager
+              id: pm
+              run: |
+                  if [ -f bun.lock ] && [ -f package-lock.json ]; then
+                      echo "::error::bun.lock and package-lock.json both exist: delete the one this repository no longer uses"
+                      exit 1
+                  elif [ -f bun.lock ]; then
+                      {
+                          echo "name=bun"
+                          echo "runtime=bun"
+                          echo "lockfile=bun.lock"
+                          echo "cache=~/.bun/install/cache"
+                      } >> "$GITHUB_OUTPUT"
+                  elif [ -f package-lock.json ]; then
+                      {
+                          echo "name=npm"
+                          echo "runtime=node"
+                          echo "lockfile=package-lock.json"
+                          echo "cache=~/.npm"
+                      } >> "$GITHUB_OUTPUT"
+                  else
+                      echo "::error::Neither bun.lock nor package-lock.json exists"
+                      exit 1
+                  fi
+
+            - name: Cache Packages
               uses: actions/cache@v6
               with:
-                  path: ~/.npm
-                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-                  restore-keys: npm-${{ runner.os }}-
+                  path: ${{ steps.pm.outputs.cache }}
+                  key: ${{ steps.pm.outputs.name }}-${{ runner.os }}-${{ hashFiles(steps.pm.outputs.lockfile) }}
+                  restore-keys: ${{ steps.pm.outputs.name }}-${{ runner.os }}-
 
-            - name: NPM Clean Install
-              run: npm ci
+            - name: Install
+              env:
+                  PM: ${{ steps.pm.outputs.name }}
+              run: |
+                  case "$PM" in
+                  bun) bun install --frozen-lockfile ;;
+                  npm) npm ci ;;
+                  esac
 
             - name: Lint Pull Request Commits
               if: github.event_name == 'pull_request'
               env:
+                  RUNTIME: ${{ steps.pm.outputs.runtime }}
                   FROM: ${{ github.event.pull_request.base.sha }}
                   TO: ${{ github.event.pull_request.head.sha }}
-              run: npx --no -- commitlint --from "$FROM" --to "$TO" --verbose
+              run: '"$RUNTIME" node_modules/.bin/commitlint --from "$FROM" --to "$TO" --verbose'
 
             # `before` is all zeros when the push creates the branch, and
             # absent on workflow_dispatch; lint only the tip in those cases.
             - name: Lint Pushed Commits
               if: github.event_name == 'push' && !startsWith(github.event.before, '0000000')
               env:
+                  RUNTIME: ${{ steps.pm.outputs.runtime }}
                   FROM: ${{ github.event.before }}
                   TO: ${{ github.sha }}
-              run: npx --no -- commitlint --from "$FROM" --to "$TO" --verbose
+              run: '"$RUNTIME" node_modules/.bin/commitlint --from "$FROM" --to "$TO" --verbose'
 
             - name: Lint Latest Commit
               if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.event.before, '0000000'))
-              run: npx --no -- commitlint --last --verbose
+              env:
+                  RUNTIME: ${{ steps.pm.outputs.runtime }}
+              run: '"$RUNTIME" node_modules/.bin/commitlint --last --verbose'

@@ -8,8 +8,9 @@
 #
 #
 
-# Reusable: installs the caller's mise toolchain and npm dependencies, then
-# runs one of its npm scripts. Triggers and concurrency belong to the caller.
+# Reusable: installs the caller's mise toolchain and its packages, with Bun
+# or npm as its lockfile says, then runs one of its package scripts. Triggers
+# and concurrency belong to the caller.
 #
 #   jobs:
 #       check:
@@ -21,7 +22,7 @@ on:
     workflow_call:
         inputs:
             script:
-                description: npm script to run
+                description: package script to run
                 type: string
                 default: check
             ref:
@@ -43,20 +44,54 @@ jobs:
                   ref: ${{ inputs.ref }}
                   persist-credentials: false
 
-            - name: Setup Node and NPM
+            - name: Setup Toolchain
               uses: jdx/mise-action@v4
 
-            - name: Cache NPM
+            # bun.lock means Bun; package-lock.json means npm. Both, or
+            # neither, is an error, not a guess.
+            - name: Detect Package Manager
+              id: pm
+              run: |
+                  if [ -f bun.lock ] && [ -f package-lock.json ]; then
+                      echo "::error::bun.lock and package-lock.json both exist: delete the one this repository no longer uses"
+                      exit 1
+                  elif [ -f bun.lock ]; then
+                      {
+                          echo "name=bun"
+                          echo "runtime=bun"
+                          echo "lockfile=bun.lock"
+                          echo "cache=~/.bun/install/cache"
+                      } >> "$GITHUB_OUTPUT"
+                  elif [ -f package-lock.json ]; then
+                      {
+                          echo "name=npm"
+                          echo "runtime=node"
+                          echo "lockfile=package-lock.json"
+                          echo "cache=~/.npm"
+                      } >> "$GITHUB_OUTPUT"
+                  else
+                      echo "::error::Neither bun.lock nor package-lock.json exists"
+                      exit 1
+                  fi
+
+            - name: Cache Packages
               uses: actions/cache@v6
               with:
-                  path: ~/.npm
-                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-                  restore-keys: npm-${{ runner.os }}-
+                  path: ${{ steps.pm.outputs.cache }}
+                  key: ${{ steps.pm.outputs.name }}-${{ runner.os }}-${{ hashFiles(steps.pm.outputs.lockfile) }}
+                  restore-keys: ${{ steps.pm.outputs.name }}-${{ runner.os }}-
 
-            - name: NPM Clean Install
-              run: npm ci
+            - name: Install
+              env:
+                  PM: ${{ steps.pm.outputs.name }}
+              run: |
+                  case "$PM" in
+                  bun) bun install --frozen-lockfile ;;
+                  npm) npm ci ;;
+                  esac
 
             - name: Run Script
               env:
+                  PM: ${{ steps.pm.outputs.name }}
                   SCRIPT: ${{ inputs.script }}
-              run: npm run "$SCRIPT"
+              run: '"$PM" run "$SCRIPT"'

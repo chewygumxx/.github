@@ -73,3 +73,12 @@ node = "24"
 # against the schema its `#:schema` line names.
 #
 "aqua:tombi-toml/tombi" = "1.5.5"
+
+[tasks.act]
+#
+# Runs CI locally in Docker. The task is shared: callers reference
+# `tasks/act` at v1, and run `ci.yaml`; this repository's CI is `self-test`.
+#
+description = "Run CI locally with act"
+file        = "tasks/act"
+env         = { ACT_WORKFLOW = "self-test.yaml" }

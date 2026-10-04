@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# vim:set expandtab shiftwidth=4 filetype=bash:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/tasks/act
+#
+#
+
+# Usage: mise run act [ACT-ARGS...]
+#
+# Runs `.github/workflows/$ACT_WORKFLOW` (default `ci.yaml`) in Docker as a
+# push of HEAD, so commitlint checks the commits the upstream lacks, or only
+# the last when there is no upstream. Arguments pass through to act, such as
+# `-j check` for one job. The jobs that write to GitHub skip themselves under
+# act; see `standard.yaml`.
+#
+# The workflow runs against the working tree, uncommitted changes included,
+# since act copies it in place of `actions/checkout`.
+#
+# A repository references this file from its own `mise.toml`:
+#
+#   [tasks.act]
+#   description = "Run CI locally with act"
+#   file        = "git::https://github.com/chewygumxx/.github.git//tasks/act?ref=v1"
+#
+# mise reads `#MISE` headers only from tasks it discovers in a directory, not
+# from one named by `file`, so this script pins its own tools and runs them
+# through `mise exec`. A version bump here reaches every caller with v1.
+
+set -euo pipefail
+
+tools=(aqua:nektos/act@0.2.89 aqua:jqlang/jq@1)
+
+cd "$(git rev-parse --show-toplevel)"
+
+workflow=.github/workflows/${ACT_WORKFLOW:-ci.yaml}
+if [[ ! -f $workflow ]]; then
+    printf 'act: %s does not exist; set ACT_WORKFLOW\n' "$workflow" >&2
+    exit 1
+fi
+
+event=$(mktemp)
+trap 'rm -f -- "$event"' EXIT
+ref=$(git symbolic-ref -q HEAD) || ref=HEAD
+before=$(git rev-parse -q --verify '@{upstream}') ||
+    before=0000000000000000000000000000000000000000
+# shellcheck disable=SC2016 # jq expands the $ names, not the shell.
+mise exec "${tools[@]}" -- jq -n \
+    --arg ref "$ref" --arg before "$before" --arg after "$(git rev-parse HEAD)" \
+    '{ref: $ref, before: $before, after: $after}' >"$event"
+
+args=()
+
+# Workflows and actions reference this repository at @v1. Here, its own
+# checkout stands in for v1, as `self-test` uses `./actions`. A caller can
+# point ACT_GITHUB at a local checkout the same way, to try an unreleased
+# change before v1 moves.
+if [[ $(git remote get-url origin 2>/dev/null) =~ [:/]chewygumxx/\.github(\.git)?$ ]]; then
+    ACT_GITHUB=${ACT_GITHUB:-$PWD}
+fi
+if [[ -n ${ACT_GITHUB-} ]]; then
+    args+=(--local-repository "chewygumxx/.github@v1=$ACT_GITHUB")
+fi
+
+# A token spares act GitHub's anonymous rate limit when it fetches actions.
+if GITHUB_TOKEN=$(gh auth token 2>/dev/null); then
+    export GITHUB_TOKEN
+    args+=(--secret GITHUB_TOKEN)
+fi
+
+mise exec "${tools[@]}" -- act push \
+    --workflows "$workflow" \
+    --eventpath "$event" \
+    --platform ubuntu-latest=catthehacker/ubuntu:act-latest \
+    --action-offline-mode \
+    --rm \
+    "${args[@]}" "$@"

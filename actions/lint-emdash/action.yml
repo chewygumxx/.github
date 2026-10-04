@@ -1,0 +1,21 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/actions/lint-emdash/action.yml
+#
+#
+
+name: Lint Em Dashes
+description: >-
+    Fails on any em dash (U+2014) in a tracked text file, which the house style
+    prohibits. Needs only git.
+
+runs:
+    using: composite
+    steps:
+        - name: Lint
+          shell: bash
+          run: '"$GITHUB_ACTION_PATH/../lib/emdash.sh"'

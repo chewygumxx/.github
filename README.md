@@ -101,6 +101,7 @@ job can combine them with its own steps.
 | `actions/lint-toml`         | TOML formatting and lint with tombi                          |
 | `actions/lint-yaml`         | YAML formatting with prettier, and lint with yamllint        |
 | `actions/lint-editorconfig` | files against `.editorconfig`, except indent size            |
+| `actions/lint-emdash`       | tracked text files for em dashes (U+2014)                    |
 
 ```yaml
 steps:

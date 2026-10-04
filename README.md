@@ -1,3 +1,19 @@
+---
+ctime: 2026-10-05
+mtime: 2026-10-05
+spdx: GPL-3.0-only
+title: ".github"
+description:
+tags:
+---
+
+<!--
+   -
+   - ~chewygumxx/.github.git
+   - ::: :/README.md
+   -
+   -->
+
 # .github
 
 Shared GitHub configuration for `chewygumxx` repositories.
@@ -15,36 +31,36 @@ repository. Each part has a boolean input to switch it off, such as
 name: CI
 
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-    workflow_dispatch: {}
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch: {}
 
 permissions:
-    contents: write
-    pull-requests: read
+  contents: write
+  pull-requests: read
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-    standard:
-        uses: chewygumxx/.github/.github/workflows/standard.yaml@v1
-        with:
-            metadata-client-id: ${{ vars.METADATA_APP_CLIENT_ID }}
-        secrets:
-            metadata-private-key: ${{ secrets.METADATA_APP_PRIVATE_KEY }}
+  standard:
+    uses: chewygumxx/.github/.github/workflows/standard.yaml@v1
+    with:
+      metadata-client-id: ${{ vars.METADATA_APP_CLIENT_ID }}
+    secrets:
+      metadata-private-key: ${{ secrets.METADATA_APP_PRIVATE_KEY }}
 
-    check:
-        needs: standard
-        if: ${{ !cancelled() }}
-        permissions:
-            contents: read
-        uses: chewygumxx/.github/.github/workflows/lint.yaml@v1
-        with:
-            ref: ${{ needs.standard.outputs.sha }}
+  check:
+    needs: standard
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+    uses: chewygumxx/.github/.github/workflows/lint.yaml@v1
+    with:
+      ref: ${{ needs.standard.outputs.sha }}
 ```
 
 Repository-specific jobs such as `check` follow with `needs: standard`. The
@@ -88,8 +104,8 @@ job can combine them with its own steps.
 
 ```yaml
 steps:
-    - uses: actions/checkout@v7
-    - uses: chewygumxx/.github/actions/lint-shell@v1
+  - uses: actions/checkout@v7
+  - uses: chewygumxx/.github/actions/lint-shell@v1
 ```
 
 The linters are pinned in `actions/mise.toml` and installed from there, not from
@@ -139,3 +155,5 @@ tag, and callers opt in by editing the reference.
 The workflows reference the actions and each other at `@v1` as well, so one tag
 always names a consistent set. A change to an action is exercised by the
 `self-test` workflow before the tag moves.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

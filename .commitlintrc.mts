@@ -19,10 +19,5 @@ export default defineConfig({
             fullName: "Claude",
             description: "Claude Code assets ie. hooks, skills, agents, etc.",
         },
-        {
-            name: "template",
-            fullName: "Template",
-            description: "The bundled templates under templates/",
-        },
     ],
 });

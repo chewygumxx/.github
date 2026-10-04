@@ -50,8 +50,8 @@ jobs:
 Repository-specific jobs such as `check` follow with `needs: standard`. The
 `sha` output is the commit the header sync pushed, if any; the `actions`,
 `shell`, `zsh`, `toml`, `yaml` and `editorconfig` outputs report which kinds of
-file the repository tracks. `cancel-in-progress: false` stops a newer run cancelling the
-header sync part-way through its commit.
+file the repository tracks. `cancel-in-progress: false` stops a newer run
+cancelling the header sync part-way through its commit.
 
 ## Reusable workflows
 

@@ -11,6 +11,9 @@
 # Runs this repository's composite actions against itself from the working
 # tree, so a change to an action is exercised before a tag publishes it.
 # (The reusable workflows reference the actions by tag and so cannot.)
+# `commitlint.yaml` and `lint.yaml` reference no actions of their own, so
+# they are called from the working tree too: they check this repository's
+# commits and its `check` script, and exercise themselves in doing so.
 
 name: Self Test
 
@@ -65,3 +68,14 @@ jobs:
             - name: Lint EditorConfig
               if: steps.detect.outputs.editorconfig == 'true'
               uses: ./actions/lint-editorconfig
+
+    commitlint:
+        permissions:
+            contents: read
+            pull-requests: read
+        uses: ./.github/workflows/commitlint.yaml
+
+    check:
+        permissions:
+            contents: read
+        uses: ./.github/workflows/lint.yaml

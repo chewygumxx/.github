@@ -54,6 +54,10 @@ on:
                 description: Check files against .editorconfig
                 type: boolean
                 default: true
+            emdash:
+                description: Reject em dashes (U+2014) in tracked text files
+                type: boolean
+                default: true
             editorconfig-args:
                 description: Arguments for editorconfig-checker
                 type: string
@@ -195,3 +199,18 @@ jobs:
               uses: chewygumxx/.github/actions/lint-editorconfig@v1
               with:
                   args: ${{ inputs.editorconfig-args }}
+
+    # Every repository tracks text, so this needs no detection.
+    emdash:
+        if: inputs.emdash
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
+                  persist-credentials: false
+
+            - name: Lint Em Dashes
+              uses: chewygumxx/.github/actions/lint-emdash@v1

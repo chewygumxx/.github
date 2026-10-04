@@ -38,6 +38,10 @@
 #
 # Repository-specific jobs can follow with `needs: standard` and check out
 # `needs.standard.outputs.sha` to see the synced headers.
+#
+# header-sync and metadata-sync write to GitHub, so neither runs under act
+# (the `act` mise task), whose default actor `nektos/act` no GitHub account
+# can be named. A job-level `if:` cannot read `env.ACT`.
 
 name: Standard
 
@@ -123,7 +127,7 @@ jobs:
         uses: chewygumxx/.github/.github/workflows/commitlint.yaml@v1
 
     header-sync:
-        if: inputs.header-sync
+        if: inputs.header-sync && github.actor != 'nektos/act'
         permissions:
             contents: write
         uses: chewygumxx/.github/.github/workflows/sync-header-metadata.yaml@v1
@@ -144,7 +148,7 @@ jobs:
 
     metadata-sync:
         if: >-
-            inputs.metadata-sync && (
+            inputs.metadata-sync && github.actor != 'nektos/act' && (
                 github.event_name == 'workflow_dispatch' || (
                     github.event_name == 'push' &&
                     github.ref_name == github.event.repository.default_branch

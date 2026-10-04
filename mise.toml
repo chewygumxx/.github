@@ -32,9 +32,9 @@ min_version = "2026.9.0"
 #
 # Runtimes
 #
-# Bun runs the scripts, the tests and the CLI. Node is here only for npm,
-# which publishes the package (`npm stage publish`, which Bun cannot do) and
-# which `test/pack.test.js` asks what it would publish.
+# Bun installs the packages and runs the scripts. Node runs the package
+# binaries whose `#!/usr/bin/env node` shebang names it, such as prettier,
+# remark and markdownlint-cli2.
 #
 bun  = "1.4"
 node = "24"
@@ -42,15 +42,16 @@ node = "24"
 #
 # Utilities
 #
-# `jq` parses the tool payload in cluade plugin `prohibit-em-dash@chewygumxx`.
+# `jq` parses the tool payload in the Claude Code plugin
+# `prohibit-em-dash@chewygumxx`.
 #
 "aqua:jqlang/jq" = "1"
 
 #
 # Lint
 #
-# CI runs the same check, so the repository and each template that
-# `lint:templates` materialises are held to their `.editorconfig`s here too.
+# CI runs the same check, so the repository is held to its `.editorconfig`
+# here too.
 #
 "aqua:editorconfig-checker/editorconfig-checker" = "4.0.2"
 

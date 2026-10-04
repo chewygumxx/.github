@@ -137,10 +137,10 @@ as `chewygumxx/nvim-config` does. Neither needs configuring either: prettier's
 defaults take indentation from `.editorconfig`, and yamllint is given the house
 style in `actions/config/yamllint.yaml` through `YAMLLINT_CONFIG_FILE`, which it
 reads only when the repository has no `.yamllint` of its own. A repository's own
-prettier configuration applies as usual. A `.yamllint` that extends a file from
-`node_modules` cannot load here, where nothing is installed; such a repository
-lints YAML in its own package scripts and passes `yaml: false` to
-`standard.yaml`.
+prettier configuration applies as usual. A `.yamllint` may extend
+`node_modules/@chewygumxx/yamllint-config/config.yaml`: nothing is installed
+here, so `lint-yaml` puts the identical house style at that path while yamllint
+runs.
 
 editorconfig-checker skips indent size by default: YAML sequences, Markdown list
 continuations and verbatim licence text all break it, and formatters already

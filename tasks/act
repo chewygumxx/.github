@@ -43,7 +43,8 @@ if [[ ! -f $workflow ]]; then
 fi
 
 event=$(mktemp)
-trap 'rm -f -- "$event"' EXIT
+stub=$(mktemp -d)
+trap 'rm -rf -- "$event" "$stub"' EXIT
 ref=$(git symbolic-ref -q HEAD) || ref=HEAD
 before=$(git rev-parse -q --verify '@{upstream}') ||
     before=0000000000000000000000000000000000000000
@@ -53,6 +54,28 @@ mise exec "${tools[@]}" -- jq -n \
     '{ref: $ref, before: $before, after: $after}' >"$event"
 
 args=()
+
+# act copies the working tree in only for an `actions/checkout` step without
+# `ref`; given one, even empty, it fetches from GitHub, which lacks unpushed
+# commits. The workflows pass `ref` for header-sync's commit, so a stand-in
+# for actions/checkout@v7 carries a copy of the tree, `.git` included, and
+# puts it in the workspace as act's own copy would.
+mkdir -- "$stub/tree"
+{
+    git ls-files -z --cached --others --exclude-standard
+    printf '.git\0'
+} | tar -c --null --ignore-failed-read --warning=no-failed-read -T - -f - |
+    tar -x -C "$stub/tree" -f -
+cat >"$stub/action.yml" <<'EOF'
+name: Checkout
+description: Copies in the working tree, standing in for actions/checkout.
+runs:
+    using: composite
+    steps:
+        - shell: bash
+          run: cp -a -- "$GITHUB_ACTION_PATH/tree/." "$GITHUB_WORKSPACE"
+EOF
+args+=(--local-repository "actions/checkout@v7=$stub")
 
 # Workflows and actions reference this repository at @v1. Here, its own
 # checkout stands in for v1, as `self-test` uses `./actions`. A caller can

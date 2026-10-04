@@ -8,17 +8,17 @@
     "enabledPlugins": {
         "claude-code-setup@claude-plugins-official": true,
         "claude-md-management@claude-plugins-official": true,
-        "code-review@claude-plugins-official": true,
         "code-simplifier@claude-plugins-official": true,
         "explanatory-output-style@claude-plugins-official": true,
         "remember@claude-plugins-official": true,
         "superpowers@claude-plugins-official": true,
 
         "prohibit-em-dash@chewygumxx": true,
-        "bun-install@chewygumxx": true,
         "repo-memory@chewygumxx": true,
         "repo-metadata@chewygumxx": true,
-        "header-metadata@chewygumxx": true
+        "header-metadata@chewygumxx": true,
+        "bun-install@chewygumxx": true,
+        "shell-lint@chewygumxx": true
     },
     "extraKnownMarketplaces": {
         "chewygumxx": {

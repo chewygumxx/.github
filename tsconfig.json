@@ -11,11 +11,5 @@
         "types": ["bun"],
         "skipLibCheck": true
     },
-    "include": [
-        ".commitlintrc.mts",
-        "bin/*.js",
-        "lib/*.js",
-        "test/*.js",
-        "scripts/*.js"
-    ]
+    "include": [".commitlintrc.mts"]
 }

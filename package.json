@@ -1,7 +1,6 @@
 {
     "name": ".github",
-    "version": "3.1.1",
-    "description": "Creates a GitHub repository from a bundled template: bun create @chewygumxx/repo",
+    "description": "Shared GitHub configuration for chewygumxx repositories",
     "private": true,
     "keywords": [
         "github",
@@ -33,7 +32,7 @@
         "typescript": "^7.0.2"
     },
     "scripts": {
-        "check": "bun run typecheck && bun run lint:biome && bun run lint:md && bun run lint:markdownlint && bun run lint:yaml && bun run lint:toml && bun run lint:emdash && bun run lint:editorconfig && bun run lint:templates && bun run test",
+        "check": "bun run typecheck && bun run lint:biome && bun run lint:md && bun run lint:markdownlint && bun run lint:yaml && bun run lint:toml && bun run lint:emdash && bun run lint:editorconfig",
         "commit": "cz",
         "format": "biome format --write . && bun run format:yaml && bun run format:toml",
         "format:check": "biome format .",
@@ -45,11 +44,9 @@
         "lint:emdash": "git grep -nIP --untracked '\\x{2014}'; test $? -eq 1",
         "lint:markdownlint": "git ls-files -z '*.md' | xargs -0 -r markdownlint-cli2",
         "lint:md": "git ls-files -z '*.md' | xargs -0 -r remark --frail --quiet --no-stdout",
-        "lint:templates": "rm -rf .templates && bun scripts/materialize.js --all .templates && for dir in .templates/*/; do (cd \"$dir\" && biome ci --vcs-use-ignore-file=false . && editorconfig-checker -disable-indent-size .) || exit 1; done",
         "lint:toml": "git ls-files -z '*.toml' | xargs -0 -r tombi format --check && git ls-files -z '*.toml' | xargs -0 -r tombi lint --error-on-warnings",
         "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamllint --strict",
         "prepare": "test -d node_modules/husky && husky || true",
-        "test": "bun test ./test/",
         "typecheck": "tsc"
     },
     "config": {

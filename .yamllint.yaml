@@ -10,7 +10,9 @@
 
 # https://yamllint.readthedocs.io/en/stable/configuration.html
 #
-# The house style from `@chewygumxx/yamllint-config`. yamllint resolves this
-# path against its working directory, so run it from the repository root; an
-# editor's linter can use this file as its root marker.
-extends: node_modules/@chewygumxx/yamllint-config/config.yaml
+# The house style, from the copy `lint-yaml` gives every other repository.
+# Extending a path in this checkout rather than `node_modules` lets the
+# self-test run `lint-yaml`, where nothing is installed, against this file.
+# yamllint resolves the path against its working directory, so run it from
+# the repository root.
+extends: actions/config/yamllint.yaml

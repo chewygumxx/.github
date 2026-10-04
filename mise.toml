@@ -16,10 +16,11 @@
 #
 # Everything the repository runs that Bun does not install lives here, so
 # a checkout never depends on whatever the contributor happens to have on
-# `PATH`. Packages (commitlint, Biome, remark, prettier, husky, TypeScript)
-# are pinned in `package.json` and installed by Bun instead; together the
-# two files are the whole dependency surface. CI installs from this file via
-# `jdx/mise-action`, so the versions below are the ones CI runs.
+# `PATH`. Packages (commitlint, Biome, remark, markdownlint-cli2, prettier,
+# husky, TypeScript) are pinned in `package.json` and installed by Bun
+# instead; together the two files are the whole dependency surface. CI
+# installs from this file via `jdx/mise-action`, so the versions below are the
+# ones CI runs.
 #
 # Backends are named explicitly rather than relying on the registry alias,
 # so the resolution is visible here and cannot change underneath the pin.

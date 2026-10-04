@@ -28,12 +28,13 @@
         "@types/bun": "^1.4.2",
         "commitizen": "^4.3.2",
         "husky": "^9.1.7",
+        "markdownlint-cli2": "^0.23.3",
         "prettier": "^3.9.9",
         "remark-cli": "^12.0.1",
         "typescript": "^7.0.2"
     },
     "scripts": {
-        "check": "bun run typecheck && bun run lint:biome && bun run lint:md && bun run lint:yaml && bun run lint:toml && bun run lint:emdash && bun run lint:editorconfig && bun run lint:templates && bun run test",
+        "check": "bun run typecheck && bun run lint:biome && bun run lint:md && bun run lint:markdownlint && bun run lint:yaml && bun run lint:toml && bun run lint:emdash && bun run lint:editorconfig && bun run lint:templates && bun run test",
         "commit": "cz",
         "format": "biome format --write . && bun run format:yaml && bun run format:toml",
         "format:check": "biome format .",
@@ -43,6 +44,7 @@
         "lint:biome": "biome ci .",
         "lint:editorconfig": "editorconfig-checker -disable-indent-size",
         "lint:emdash": "git grep -nIP --untracked '\\x{2014}'; test $? -eq 1",
+        "lint:markdownlint": "git ls-files -z '*.md' | xargs -0 -r markdownlint-cli2",
         "lint:md": "git ls-files -z '*.md' | xargs -0 -r remark --frail --quiet --no-stdout",
         "lint:templates": "rm -rf .templates && bun scripts/materialize.js --all .templates && for dir in .templates/*/; do (cd \"$dir\" && biome ci --vcs-use-ignore-file=false . && editorconfig-checker -disable-indent-size .) || exit 1; done",
         "lint:toml": "git ls-files -z '*.toml' | xargs -0 -r tombi format --check && git ls-files -z '*.toml' | xargs -0 -r tombi lint --error-on-warnings",

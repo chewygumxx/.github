@@ -147,6 +147,31 @@ editorconfig-checker skips indent size by default: YAML sequences, Markdown list
 continuations and verbatim licence text all break it, and formatters already
 own indentation. Pass `editorconfig-args` to change that.
 
+## Running CI locally
+
+`mise run act` runs a repository's CI workflow in Docker with
+[act](https://github.com/nektos/act), as a push of `HEAD` against the working
+tree, uncommitted changes included. Arguments pass through to act, such as
+`-j check` for one job. A repository adds the shared task to its `mise.toml`:
+
+```toml
+[settings]
+task.remote_no_cache = true
+
+[tasks.act]
+description = "Run CI locally with act"
+file        = "git::https://github.com/chewygumxx/.github.git//tasks/act?ref=v1"
+```
+
+mise would otherwise keep its first copy of the task past any move of `v1`.
+The task runs `.github/workflows/ci.yaml`, or the workflow `ACT_WORKFLOW`
+names; this repository runs `self-test.yaml` against its own checkout in place
+of `v1`. Set `ACT_GITHUB` to a local checkout of this repository to try a
+caller against an unreleased change.
+
+`header-sync` and `metadata-sync` write to GitHub, so they skip themselves
+under act, whose actor is `nektos/act`. Every other job runs as it would in CI.
+
 ## Versioning
 
 Callers pin a major tag such as `@v1`. Compatible changes move the tag forward,

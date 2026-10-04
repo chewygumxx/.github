@@ -22,9 +22,15 @@
 #
 # A repository references this file from its own `mise.toml`:
 #
+#   [settings]
+#   task.remote_no_cache = true
+#
 #   [tasks.act]
 #   description = "Run CI locally with act"
 #   file        = "git::https://github.com/chewygumxx/.github.git//tasks/act?ref=v1"
+#
+# mise otherwise keeps the first copy of a remote task for good, past any
+# move of v1; the setting refetches it only to list tasks or run this one.
 #
 # mise reads `#MISE` headers only from tasks it discovers in a directory, not
 # from one named by `file`, so this script pins its own tools and runs them
@@ -98,6 +104,5 @@ mise exec "${tools[@]}" -- act push \
     --workflows "$workflow" \
     --eventpath "$event" \
     --platform ubuntu-latest=catthehacker/ubuntu:act-latest \
-    --action-offline-mode \
     --rm \
     "${args[@]}" "$@"

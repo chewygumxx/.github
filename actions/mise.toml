@@ -1,6 +1,5 @@
 # vim:set expandtab shiftwidth=4 filetype=toml:
 # SPDX-License-Identifier: GPL-3.0-only
-#:tombi schema.strict = false
 
 #
 #
@@ -24,10 +23,8 @@
 "aqua:rhysd/actionlint"                          = "1.7.12"
 "aqua:tombi-toml/tombi"                          = "1.5.5"
 
-# The release assets are named shuck-cli-*, so the binary is named here.
-# mise accepts `exe`, but its schema omits it; hence the strict-mode
-# directive at the top of this file.
-"github:ewhauser/shuck" = { version = "0.2.3", exe = "shuck" }
+# Not in the mise registry, so it comes from its GitHub releases.
+"github:ewhauser/shuck" = "0.2.3"
 
 # YAML. prettier is an npm package and yamllint a Python one; mise installs
 # them with the Node and uv pinned here rather than whatever the runner has.

@@ -24,20 +24,13 @@ mapfile -d '' files < <("$lib/tracked.sh" '*.yaml' '*.yml')
 
 export YAMLLINT_CONFIG_FILE=$lib/../config/yamllint.yaml
 
-# A repository's own `.yamllint` may extend `@chewygumxx/yamllint-config`
-# from `node_modules`, which is not installed here. Put the identical copy at
-# that path while yamllint runs, and remove only what was created, so a later
-# step in the caller's job sees the checkout as it was.
-shared=node_modules/@chewygumxx/yamllint-config
-if [[ ! -e $shared ]]; then
-    created=$shared
-    while [[ ! -e $(dirname "$created") ]]; do
-        created=$(dirname "$created")
-    done
-    trap 'rm -rf -- "$created"' EXIT
-    mkdir -p -- "$shared"
-    cp -- "$YAMLLINT_CONFIG_FILE" "$shared/config.yaml"
-fi
+# A repository's own `.yamllint` may extend `@chewygumxx/yamllint-config`,
+# and its prettier configuration be `@chewygumxx/prettier-config`, from
+# `node_modules`, which is not installed here.
+# shellcheck source=actions/lib/shared-config.sh
+source "$lib/shared-config.sh"
+supply yamllint-config || true
+supply prettier-config || true
 
 status=0
 prettier --check -- "${files[@]}" || status=1

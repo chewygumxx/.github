@@ -11,8 +11,9 @@
 name: Lint YAML
 description: >-
     Checks formatting of tracked YAML files with prettier and lints them with
-    yamllint. Uses the repository's configurations, or the house style without
-    them.
+    yamllint. Uses the repository's configurations, including a declared
+    `@chewygumxx/prettier-config` or `@chewygumxx/yamllint-config`, or the
+    house style without them.
 
 runs:
     using: composite

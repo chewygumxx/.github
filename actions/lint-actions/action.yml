@@ -11,7 +11,8 @@
 name: Lint Workflows
 description: >-
     Runs actionlint over the repository's workflows, with shellcheck checking
-    their `run:` scripts. Configure it with `.github/actionlint.yaml`.
+    their `run:` scripts. Configure it with `.github/actionlint.yaml`, or by
+    declaring `@chewygumxx/actionlint-config`.
 
 runs:
     using: composite
@@ -30,4 +31,4 @@ runs:
 
         - name: Lint
           shell: bash
-          run: actionlint -color
+          run: '"$GITHUB_ACTION_PATH/../lib/actionlint.sh"'

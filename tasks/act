@@ -13,9 +13,9 @@
 #
 # Runs `.github/workflows/$ACT_WORKFLOW` (default `ci.yaml`) in Docker as a
 # push of HEAD, so commitlint checks the commits the upstream lacks, or only
-# the last when there are none or no upstream. Arguments pass through to act, such as
-# `-j check` for one job. The jobs that write to GitHub skip themselves under
-# act; see `standard.yaml`.
+# the last when there are none or no upstream. Arguments pass through to act,
+# such as `-j check` for one job. The jobs that write to GitHub skip
+# themselves under act; see `standard.yaml`.
 #
 # The workflow runs against the working tree, uncommitted changes included,
 # since act copies it in place of `actions/checkout`.

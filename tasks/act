@@ -13,7 +13,7 @@
 #
 # Runs `.github/workflows/$ACT_WORKFLOW` (default `ci.yaml`) in Docker as a
 # push of HEAD, so commitlint checks the commits the upstream lacks, or only
-# the last when there is no upstream. Arguments pass through to act, such as
+# the last when there are none or no upstream. Arguments pass through to act, such as
 # `-j check` for one job. The jobs that write to GitHub skip themselves under
 # act; see `standard.yaml`.
 #
@@ -52,8 +52,13 @@ event=$(mktemp)
 stub=$(mktemp -d)
 trap 'rm -rf -- "$event" "$stub"' EXIT
 ref=$(git symbolic-ref -q HEAD) || ref=HEAD
-before=$(git rev-parse -q --verify '@{upstream}') ||
+# The fork point from the upstream, as GitHub's `before` would be. With
+# nothing unpushed it equals HEAD, an empty range commitlint refuses, so the
+# zero SHA stands in, as for a new branch.
+before=$(git merge-base '@{upstream}' HEAD 2>/dev/null) || before=
+if [[ -z $before || $before == "$(git rev-parse HEAD)" ]]; then
     before=0000000000000000000000000000000000000000
+fi
 # shellcheck disable=SC2016 # jq expands the $ names, not the shell.
 mise exec "${tools[@]}" -- jq -n \
     --arg ref "$ref" --arg before "$before" --arg after "$(git rev-parse HEAD)" \

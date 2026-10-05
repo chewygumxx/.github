@@ -11,7 +11,9 @@
 name: Lint Shell Scripts
 description: >-
     Runs shellcheck and checks shfmt formatting over tracked sh, bash, dash
-    and ksh scripts. shfmt takes its style from `.editorconfig`. Skipped when
+    and ksh scripts. shellcheck reads `.shellcheckrc`, or a declared
+    `@chewygumxx/shellcheck-config`; shfmt takes its style from
+    `.editorconfig`. Skipped when
     the repository configures shuck, which then owns every shell script (see
     lint-zsh); the two formatters disagree.
 
@@ -44,7 +46,7 @@ runs:
         - name: Lint
           if: steps.scope.outputs.skip != 'true'
           shell: bash
-          run: '"$GITHUB_ACTION_PATH/../lib/filetype.sh" sh | xargs -0 -r shellcheck --'
+          run: '"$GITHUB_ACTION_PATH/../lib/shellcheck.sh"'
 
         - name: Check Formatting
           if: steps.scope.outputs.skip != 'true'

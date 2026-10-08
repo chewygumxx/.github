@@ -10,10 +10,25 @@
 
 name: Detect Lintable Files
 description: >-
-    Reports which kinds of file the checked-out repository tracks, for gating
-    the lint jobs that apply to them.
+    Reports which kinds of file the checked-out repository tracks, and how
+    much of each changed since the last commit known to pass, for gating the
+    lint jobs that apply to them. Check out with `fetch-depth: 0`, or every
+    file is checked.
+
+inputs:
+    token:
+        description: >-
+            Token listing the caller workflow's runs, to find the last
+            successful push run; it needs `actions: read`, which a public
+            repository's default token is given
+        default: ${{ github.token }}
 
 outputs:
+    base:
+        description: >-
+            Commit the lints may diff against, for the lint actions' `base`;
+            empty when every file must be checked
+        value: ${{ steps.detect.outputs.base }}
     actions:
         description: '"true" when workflows exist under .github/workflows'
         value: ${{ steps.detect.outputs.actions }}
@@ -34,16 +49,51 @@ outputs:
     editorconfig:
         description: '"true" when an .editorconfig is tracked at the root'
         value: ${{ steps.detect.outputs.editorconfig }}
+    actions-scope:
+        description: >-
+            "all", "changed" or "none": how much of the workflows to lint, as
+            for each kind below; "none" when none are tracked or none changed
+        value: ${{ steps.detect.outputs.actions-scope }}
+    shell-scope:
+        description: How much of the sh and bash scripts to lint
+        value: ${{ steps.detect.outputs.shell-scope }}
+    zsh-scope:
+        description: >-
+            How much of the zsh scripts to lint, or of every shell script
+            with a shuck configuration
+        value: ${{ steps.detect.outputs.zsh-scope }}
+    toml-scope:
+        description: How much of the TOML files to lint
+        value: ${{ steps.detect.outputs.toml-scope }}
+    yaml-scope:
+        description: How much of the YAML files to lint
+        value: ${{ steps.detect.outputs.yaml-scope }}
+    editorconfig-scope:
+        description: How much of the files to check against .editorconfig
+        value: ${{ steps.detect.outputs.editorconfig-scope }}
+    emdash-scope:
+        description: How much of the text files to check for em dashes
+        value: ${{ steps.detect.outputs.emdash-scope }}
 
 runs:
     using: composite
     steps:
-        # Presence across the whole repository, not only changed files: a
-        # config or tool change can break files the push did not touch.
+        # Presence across the whole repository, then how much of each kind
+        # changed since `base` (see lib/base.sh and lib/scope.sh): a kind
+        # tracked but unchanged is "none", and its lint job is skipped.
         # Symlinks are not counted, as the linters skip them.
         - name: Detect
           id: detect
           shell: bash
+          env:
+              EVENT: ${{ github.event_name }}
+              PR_BASE: ${{ github.event.pull_request.base.sha }}
+              REF_TYPE: ${{ github.ref_type }}
+              REF_NAME: ${{ github.ref_name }}
+              WORKFLOW_REF: ${{ github.workflow_ref }}
+              REPOSITORY: ${{ github.repository }}
+              API: ${{ github.api_url }}
+              TOKEN: ${{ inputs.token }}
           run: |
               lib=$GITHUB_ACTION_PATH/../lib
               # Reads all of its input: grep -q would stop at the first
@@ -52,11 +102,34 @@ runs:
               shuck=$(git ls-files -z -- .shuck.toml shuck.toml | any)
               sh=$("$lib/filetype.sh" sh | any)
               zsh=$("$lib/filetype.sh" zsh | any)
+              actions=$("$lib/tracked.sh" '.github/workflows/*.yml' '.github/workflows/*.yaml' | any)
+              shell=$([ "$sh" = true ] && [ "$shuck" = false ] && echo true || echo false)
+              zsh=$([ "$zsh" = true ] || [ "$shuck" = true ] && echo true || echo false)
+              toml=$("$lib/tracked.sh" '*.toml' | any)
+              yaml=$("$lib/tracked.sh" '*.yaml' '*.yml' | any)
+              editorconfig=$("$lib/tracked.sh" .editorconfig | any)
+              base=$("$lib/base.sh")
+              # KIND PRESENT
+              scope() {
+                  if [ "$2" = true ]; then
+                      LINT_BASE=$base "$lib/scope.sh" "$1"
+                  else
+                      echo none
+                  fi
+              }
               {
-                  echo "actions=$("$lib/tracked.sh" '.github/workflows/*.yml' '.github/workflows/*.yaml' | any)"
-                  echo "shell=$([ "$sh" = true ] && [ "$shuck" = false ] && echo true || echo false)"
-                  echo "zsh=$([ "$zsh" = true ] || [ "$shuck" = true ] && echo true || echo false)"
-                  echo "toml=$("$lib/tracked.sh" '*.toml' | any)"
-                  echo "yaml=$("$lib/tracked.sh" '*.yaml' '*.yml' | any)"
-                  echo "editorconfig=$("$lib/tracked.sh" .editorconfig | any)"
+                  echo "actions=$actions"
+                  echo "shell=$shell"
+                  echo "zsh=$zsh"
+                  echo "toml=$toml"
+                  echo "yaml=$yaml"
+                  echo "editorconfig=$editorconfig"
+                  echo "base=$base"
+                  echo "actions-scope=$(scope actions "$actions")"
+                  echo "shell-scope=$(scope shell "$shell")"
+                  echo "zsh-scope=$(scope zsh "$zsh")"
+                  echo "toml-scope=$(scope toml "$toml")"
+                  echo "yaml-scope=$(scope yaml "$yaml")"
+                  echo "editorconfig-scope=$(scope editorconfig "$editorconfig")"
+                  echo "emdash-scope=$(scope emdash true)"
               } | tee -a "$GITHUB_OUTPUT"

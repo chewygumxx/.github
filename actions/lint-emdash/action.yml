@@ -13,9 +13,30 @@ description: >-
     Fails on any em dash (U+2014) in a tracked text file, which the house style
     prohibits. Needs only git.
 
+inputs:
+    base:
+        description: >-
+            Commit known to pass, such as the detect action's `base` output:
+            only files changed since it are searched. Empty searches every
+            file.
+        default: ""
+
 runs:
     using: composite
     steps:
-        - name: Lint
+        - name: Scope
+          id: scope
           shell: bash
+          env:
+              LINT_BASE: ${{ inputs.base }}
+          run: |
+              scope=$("$GITHUB_ACTION_PATH/../lib/scope.sh" emdash)
+              echo "scope=$scope" >> "$GITHUB_OUTPUT"
+              [ "$scope" != changed ] || echo "base=$LINT_BASE" >> "$GITHUB_OUTPUT"
+
+        - name: Lint
+          if: steps.scope.outputs.scope != 'none'
+          shell: bash
+          env:
+              LINT_BASE: ${{ steps.scope.outputs.base }}
           run: '"$GITHUB_ACTION_PATH/../lib/emdash.sh"'

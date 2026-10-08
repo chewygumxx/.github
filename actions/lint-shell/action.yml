@@ -17,20 +17,35 @@ description: >-
     the repository configures shuck, which then owns every shell script (see
     lint-zsh); the two formatters disagree.
 
+inputs:
+    base:
+        description: >-
+            Commit known to pass, such as the detect action's `base` output:
+            only files changed since it are linted, or none when none
+            changed, unless the linter's configuration changed. Empty lints
+            every file.
+        default: ""
+
 runs:
     using: composite
     steps:
         - name: Scope
           id: scope
           shell: bash
+          env:
+              LINT_BASE: ${{ inputs.base }}
           run: |
               if [ -n "$(git ls-files -- .shuck.toml shuck.toml)" ]; then
                   echo "::notice::shuck is configured; it lints this repository's shell scripts."
-                  echo "skip=true" >> "$GITHUB_OUTPUT"
+                  echo "scope=none" >> "$GITHUB_OUTPUT"
+                  exit 0
               fi
+              scope=$("$GITHUB_ACTION_PATH/../lib/scope.sh" shell)
+              echo "scope=$scope" >> "$GITHUB_OUTPUT"
+              [ "$scope" != changed ] || echo "base=$LINT_BASE" >> "$GITHUB_OUTPUT"
 
         - name: Setup mise
-          if: steps.scope.outputs.skip != 'true'
+          if: steps.scope.outputs.scope != 'none'
           uses: jdx/mise-action@v4
           with:
               install: false
@@ -39,16 +54,20 @@ runs:
               cache_key_prefix: chewygumxx-lint
 
         - name: Install shellcheck and shfmt
-          if: steps.scope.outputs.skip != 'true'
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
           run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:koalaman/shellcheck aqua:mvdan/sh'
 
         - name: Lint
-          if: steps.scope.outputs.skip != 'true'
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
+          env:
+              LINT_BASE: ${{ steps.scope.outputs.base }}
           run: '"$GITHUB_ACTION_PATH/../lib/shellcheck.sh"'
 
         - name: Check Formatting
-          if: steps.scope.outputs.skip != 'true'
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
+          env:
+              LINT_BASE: ${{ steps.scope.outputs.base }}
           run: '"$GITHUB_ACTION_PATH/../lib/filetype.sh" sh | xargs -0 -r shfmt --diff --'

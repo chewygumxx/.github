@@ -14,6 +14,13 @@ description: >-
     trailing whitespace, final newlines and indent style.
 
 inputs:
+    base:
+        description: >-
+            Commit known to pass, such as the detect action's `base` output:
+            only files changed since it are checked, or none when none
+            changed, unless the linter's configuration changed. Empty checks
+            every file.
+        default: ""
     args:
         description: >-
             Arguments for editorconfig-checker. Indent size is off by default:
@@ -24,7 +31,18 @@ inputs:
 runs:
     using: composite
     steps:
+        - name: Scope
+          id: scope
+          shell: bash
+          env:
+              LINT_BASE: ${{ inputs.base }}
+          run: |
+              scope=$("$GITHUB_ACTION_PATH/../lib/scope.sh" editorconfig)
+              echo "scope=$scope" >> "$GITHUB_OUTPUT"
+              [ "$scope" != changed ] || echo "base=$LINT_BASE" >> "$GITHUB_OUTPUT"
+
         - name: Setup mise
+          if: steps.scope.outputs.scope != 'none'
           uses: jdx/mise-action@v4
           with:
               install: false
@@ -33,12 +51,21 @@ runs:
               cache_key_prefix: chewygumxx-lint
 
         - name: Install editorconfig-checker
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
           run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:editorconfig-checker/editorconfig-checker'
 
         - name: Lint
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
           env:
+              LINT_BASE: ${{ steps.scope.outputs.base }}
               ARGS: ${{ inputs.args }}
           # ARGS is split on whitespace deliberately, to allow several flags.
-          run: editorconfig-checker $ARGS
+          # Named files are excluded by the same defaults as the walk.
+          run: |
+              if [ -n "$LINT_BASE" ]; then
+                  "$GITHUB_ACTION_PATH/../lib/tracked.sh" | xargs -0 -r editorconfig-checker $ARGS --
+              else
+                  editorconfig-checker $ARGS
+              fi

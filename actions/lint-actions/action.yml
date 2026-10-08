@@ -14,10 +14,30 @@ description: >-
     their `run:` scripts. Configure it with `.github/actionlint.yaml`, or by
     declaring `@chewygumxx/actionlint-config`.
 
+inputs:
+    base:
+        description: >-
+            Commit known to pass, such as the detect action's `base` output:
+            the workflows are linted only when a workflow, action or the
+            linter's configuration changed since it, and then all of them,
+            as each is checked against those it calls. Empty lints them.
+        default: ""
+
 runs:
     using: composite
     steps:
+        - name: Scope
+          id: scope
+          shell: bash
+          env:
+              LINT_BASE: ${{ inputs.base }}
+          run: |
+              scope=$("$GITHUB_ACTION_PATH/../lib/scope.sh" actions)
+              echo "scope=$scope" >> "$GITHUB_OUTPUT"
+              [ "$scope" != changed ] || echo "base=$LINT_BASE" >> "$GITHUB_OUTPUT"
+
         - name: Setup mise
+          if: steps.scope.outputs.scope != 'none'
           uses: jdx/mise-action@v4
           with:
               install: false
@@ -26,9 +46,11 @@ runs:
               cache_key_prefix: chewygumxx-lint
 
         - name: Install actionlint
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
           run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" aqua:rhysd/actionlint aqua:koalaman/shellcheck'
 
         - name: Lint
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
           run: '"$GITHUB_ACTION_PATH/../lib/actionlint.sh"'

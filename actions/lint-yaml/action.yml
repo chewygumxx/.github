@@ -15,10 +15,30 @@ description: >-
     `@chewygumxx/prettier-config` or `@chewygumxx/yamllint-config`, or the
     house style without them.
 
+inputs:
+    base:
+        description: >-
+            Commit known to pass, such as the detect action's `base` output:
+            only files changed since it are linted, or none when none
+            changed, unless the linter's configuration changed. Empty lints
+            every file.
+        default: ""
+
 runs:
     using: composite
     steps:
+        - name: Scope
+          id: scope
+          shell: bash
+          env:
+              LINT_BASE: ${{ inputs.base }}
+          run: |
+              scope=$("$GITHUB_ACTION_PATH/../lib/scope.sh" yaml)
+              echo "scope=$scope" >> "$GITHUB_OUTPUT"
+              [ "$scope" != changed ] || echo "base=$LINT_BASE" >> "$GITHUB_OUTPUT"
+
         - name: Setup mise
+          if: steps.scope.outputs.scope != 'none'
           uses: jdx/mise-action@v4
           with:
               install: false
@@ -27,9 +47,13 @@ runs:
               cache_key_prefix: chewygumxx-lint
 
         - name: Install prettier and yamllint
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
           run: '"$GITHUB_ACTION_PATH/../lib/setup-tools.sh" node aqua:astral-sh/uv npm:prettier pypi:yamllint'
 
         - name: Lint and Check Formatting
+          if: steps.scope.outputs.scope != 'none'
           shell: bash
+          env:
+              LINT_BASE: ${{ steps.scope.outputs.base }}
           run: '"$GITHUB_ACTION_PATH/../lib/yaml.sh"'

@@ -94,7 +94,7 @@ job can combine them with its own steps.
 
 | Action                      | Checks                                                       |
 | --------------------------- | ------------------------------------------------------------ |
-| `actions/detect`            | which kinds of file are tracked, as outputs                  |
+| `actions/detect`            | which kinds of file are tracked, and changed, as outputs     |
 | `actions/lint-actions`      | workflows with actionlint, and their scripts with shellcheck |
 | `actions/lint-shell`        | sh, bash, dash and ksh scripts with shellcheck and shfmt     |
 | `actions/lint-zsh`          | zsh scripts with shuck                                       |
@@ -154,6 +154,47 @@ latest without a lock. `lint-yaml` supplies `prettier-config` and
 editorconfig-checker skips indent size by default: YAML sequences, Markdown list
 continuations and verbatim licence text all break it, and formatters already
 own indentation. Pass `editorconfig-args` to change that.
+
+## Linting only what changed
+
+`lint-format` checks only what changed since the last commit known to pass. A
+pull request is answerable for its own changes, so it is diffed against its
+fork point. A push is diffed against the commit of the caller workflow's last
+successful push run on its branch: once a lint fails, its files stay in scope
+on every later push, whether or not that push touches them, until a run
+passes. A lint is skipped when nothing of its kind changed, and otherwise
+given only the changed files, except that a change to a file configuring it,
+such as `.editorconfig`, `.yamllint.yaml` or `package.json`, checks every file.
+`actions/lib/scope.sh` lists those files for each lint, and actionlint checks
+every workflow whenever any workflow or action changes.
+
+Everything is checked on `workflow_dispatch`, on the first push of a branch,
+under act, and whenever the last passing commit cannot be found: when the
+caller's token cannot list its workflow runs, or the commit is gone after a
+force push. A public repository's default token can list them; a private one's
+needs `actions: read` granted by the caller.
+
+The linters and the house style are pinned by this repository's tag, not by
+anything in the caller, so moving `v1` re-checks nothing by itself. Run a
+caller's workflow by `workflow_dispatch` to check everything against the new
+tag.
+
+A repository using the composite actions directly gets the same from
+`actions/detect`, checked out with `fetch-depth: 0`, whose `base` output each
+lint action takes as its `base` input; without one it checks every file.
+
+```yaml
+steps:
+  - uses: actions/checkout@v7
+    with:
+      fetch-depth: 0
+  - id: detect
+    uses: chewygumxx/.github/actions/detect@v1
+  - if: steps.detect.outputs.shell-scope != 'none'
+    uses: chewygumxx/.github/actions/lint-shell@v1
+    with:
+      base: ${{ steps.detect.outputs.base }}
+```
 
 ## Running CI locally
 

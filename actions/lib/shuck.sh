@@ -19,6 +19,10 @@
 # reads a file it is named, and lints each file once. Otherwise only the
 # detected zsh scripts are passed, forced to the zsh dialect: shuck's own
 # detection can misread a `.plugin.zsh` file as sh.
+#
+# With LINT_BASE, only the scripts changed since it are passed (see
+# tracked.sh), with a configuration the sh scripts among them too, and the
+# tree is not walked.
 
 set -euo pipefail
 
@@ -27,7 +31,12 @@ lib=$(cd "$(dirname "$0")" && pwd)
 mapfile -d '' files < <("$lib/filetype.sh" zsh)
 
 status=0
-if [ -n "$(git ls-files -- .shuck.toml shuck.toml)" ]; then
+if [ -n "$(git ls-files -- .shuck.toml shuck.toml)" ] && [ -n "${LINT_BASE-}" ]; then
+    mapfile -d '' -O "${#files[@]}" files < <("$lib/filetype.sh" sh)
+    ((${#files[@]})) || exit 0
+    shuck check --output-format github -- "${files[@]}" || status=1
+    shuck format --diff -- "${files[@]}" || status=1
+elif [ -n "$(git ls-files -- .shuck.toml shuck.toml)" ]; then
     shuck check --output-format github -- . "${files[@]}" || status=1
     shuck format --diff -- . "${files[@]}" || status=1
 else

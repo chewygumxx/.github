@@ -13,7 +13,9 @@
 #   commitlint     lints the pushed or pull request commit messages
 #   header-sync    rewrites file headers and commits them
 #   lint-format    generic lint and format checks, after header-sync and
-#                  against the commit it pushed
+#                  against the commit it pushed, of only what changed since
+#                  the last commit known to pass; workflow_dispatch checks
+#                  everything
 #   metadata-sync  applies .repo-metadata.jsonc to the repository settings on
 #                  every push to the default branch and on workflow_dispatch,
 #                  so it fails visibly while the App secret or variable is

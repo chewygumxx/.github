@@ -11,9 +11,19 @@
 
 # Fails on any em dash (U+2014) in a tracked text file, annotating each one.
 # The house style prohibits them; the pre-commit hooks reject one in staged
-# lines, and this holds the whole tree to the same rule.
+# lines, and this holds the whole tree to the same rule. With LINT_BASE, only
+# the files changed since it are searched (see tracked.sh).
 
 set -euo pipefail
+
+lib=$(cd "$(dirname "$0")" && pwd)
+
+# git grep given no path searches everything, so an empty change set is done.
+paths=()
+if [[ -n ${LINT_BASE-} ]]; then
+    mapfile -d '' paths < <("$lib/tracked.sh")
+    ((${#paths[@]})) || exit 0
+fi
 
 # Escapes a value for a workflow command property.
 escape() {
@@ -29,7 +39,8 @@ trap 'rm -f -- "$matches"' EXIT
 
 # Exit 1 is no match; anything above it is git failing.
 status=0
-git grep -z -nIP --column '\x{2014}' >"$matches" || status=$?
+git --literal-pathspecs grep -z -nIP --column '\x{2014}' -- "${paths[@]}" \
+    >"$matches" || status=$?
 ((status <= 1)) || exit "$status"
 
 found=0

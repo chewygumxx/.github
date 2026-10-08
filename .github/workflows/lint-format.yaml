@@ -9,9 +9,12 @@
 #
 
 # Reusable: repository-agnostic linting and format checks, one job per kind
-# of file. A job runs only when its kind of file is tracked; a job skipped by
-# its condition still satisfies a required status check. Tools are pinned in
-# this repository's `actions/mise.toml`, independent of the caller's.
+# of file. A job runs only when its kind of file is tracked and changed since
+# the last commit known to pass, and then checks only the changed files,
+# unless a file configuring its linter changed (see actions/lib/base.sh and
+# actions/lib/scope.sh). workflow_dispatch checks everything. A job skipped
+# by its condition still satisfies a required status check. Tools are pinned
+# in this repository's `actions/mise.toml`, independent of the caller's.
 #
 # Linters a repository pins itself (Biome, remark, commitlint via npm) are
 # left to that repository's own checks, so CI and local hooks agree. YAML is
@@ -96,12 +99,22 @@ jobs:
             toml: ${{ steps.detect.outputs.toml }}
             yaml: ${{ steps.detect.outputs.yaml }}
             editorconfig: ${{ steps.detect.outputs.editorconfig }}
+            base: ${{ steps.detect.outputs.base }}
+            actions-scope: ${{ steps.detect.outputs.actions-scope }}
+            shell-scope: ${{ steps.detect.outputs.shell-scope }}
+            zsh-scope: ${{ steps.detect.outputs.zsh-scope }}
+            toml-scope: ${{ steps.detect.outputs.toml-scope }}
+            yaml-scope: ${{ steps.detect.outputs.yaml-scope }}
+            editorconfig-scope: ${{ steps.detect.outputs.editorconfig-scope }}
+            emdash-scope: ${{ steps.detect.outputs.emdash-scope }}
 
         steps:
+            # The whole history, to find the last passing commit in.
             - name: Checkout
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: 0
                   persist-credentials: false
 
             - name: Detect
@@ -110,22 +123,27 @@ jobs:
 
     actions:
         needs: detect
-        if: inputs.actions && needs.detect.outputs.actions == 'true'
+        if: inputs.actions && needs.detect.outputs.actions-scope != 'none'
         runs-on: ubuntu-latest
 
         steps:
+            # History only to diff against a base. Written this way round, as
+            # `&& 0 ||` would take 0 as false and always give 1.
             - name: Checkout
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: ${{ needs.detect.outputs.base == '' && 1 || 0 }}
                   persist-credentials: false
 
             - name: Lint Workflows
               uses: chewygumxx/.github/actions/lint-actions@v1
+              with:
+                  base: ${{ needs.detect.outputs.base }}
 
     shell:
         needs: detect
-        if: inputs.shell && needs.detect.outputs.shell == 'true'
+        if: inputs.shell && needs.detect.outputs.shell-scope != 'none'
         runs-on: ubuntu-latest
 
         steps:
@@ -133,14 +151,17 @@ jobs:
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: ${{ needs.detect.outputs.base == '' && 1 || 0 }}
                   persist-credentials: false
 
             - name: Lint Shell Scripts
               uses: chewygumxx/.github/actions/lint-shell@v1
+              with:
+                  base: ${{ needs.detect.outputs.base }}
 
     zsh:
         needs: detect
-        if: inputs.zsh && needs.detect.outputs.zsh == 'true'
+        if: inputs.zsh && needs.detect.outputs.zsh-scope != 'none'
         runs-on: ubuntu-latest
 
         steps:
@@ -148,14 +169,17 @@ jobs:
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: ${{ needs.detect.outputs.base == '' && 1 || 0 }}
                   persist-credentials: false
 
             - name: Lint Zsh
               uses: chewygumxx/.github/actions/lint-zsh@v1
+              with:
+                  base: ${{ needs.detect.outputs.base }}
 
     toml:
         needs: detect
-        if: inputs.toml && needs.detect.outputs.toml == 'true'
+        if: inputs.toml && needs.detect.outputs.toml-scope != 'none'
         runs-on: ubuntu-latest
 
         steps:
@@ -163,14 +187,17 @@ jobs:
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: ${{ needs.detect.outputs.base == '' && 1 || 0 }}
                   persist-credentials: false
 
             - name: Lint TOML
               uses: chewygumxx/.github/actions/lint-toml@v1
+              with:
+                  base: ${{ needs.detect.outputs.base }}
 
     yaml:
         needs: detect
-        if: inputs.yaml && needs.detect.outputs.yaml == 'true'
+        if: inputs.yaml && needs.detect.outputs.yaml-scope != 'none'
         runs-on: ubuntu-latest
 
         steps:
@@ -178,14 +205,17 @@ jobs:
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: ${{ needs.detect.outputs.base == '' && 1 || 0 }}
                   persist-credentials: false
 
             - name: Lint YAML
               uses: chewygumxx/.github/actions/lint-yaml@v1
+              with:
+                  base: ${{ needs.detect.outputs.base }}
 
     editorconfig:
         needs: detect
-        if: inputs.editorconfig && needs.detect.outputs.editorconfig == 'true'
+        if: inputs.editorconfig && needs.detect.outputs.editorconfig-scope != 'none'
         runs-on: ubuntu-latest
 
         steps:
@@ -193,16 +223,18 @@ jobs:
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: ${{ needs.detect.outputs.base == '' && 1 || 0 }}
                   persist-credentials: false
 
             - name: Lint EditorConfig
               uses: chewygumxx/.github/actions/lint-editorconfig@v1
               with:
+                  base: ${{ needs.detect.outputs.base }}
                   args: ${{ inputs.editorconfig-args }}
 
-    # Every repository tracks text, so this needs no detection.
     emdash:
-        if: inputs.emdash
+        needs: detect
+        if: inputs.emdash && needs.detect.outputs.emdash-scope != 'none'
         runs-on: ubuntu-latest
 
         steps:
@@ -210,7 +242,10 @@ jobs:
               uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.ref }}
+                  fetch-depth: ${{ needs.detect.outputs.base == '' && 1 || 0 }}
                   persist-credentials: false
 
             - name: Lint Em Dashes
               uses: chewygumxx/.github/actions/lint-emdash@v1
+              with:
+                  base: ${{ needs.detect.outputs.base }}

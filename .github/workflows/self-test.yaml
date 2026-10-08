@@ -36,9 +36,11 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            # The whole history, to find the last passing commit in.
             - name: Checkout
               uses: actions/checkout@v7
               with:
+                  fetch-depth: 0
                   persist-credentials: false
 
             - name: Detect
@@ -46,31 +48,46 @@ jobs:
               uses: ./actions/detect
 
             - name: Lint Workflows
-              if: steps.detect.outputs.actions == 'true'
+              if: steps.detect.outputs.actions-scope != 'none'
               uses: ./actions/lint-actions
+              with:
+                  base: ${{ steps.detect.outputs.base }}
 
             - name: Lint Shell Scripts
-              if: steps.detect.outputs.shell == 'true'
+              if: steps.detect.outputs.shell-scope != 'none'
               uses: ./actions/lint-shell
+              with:
+                  base: ${{ steps.detect.outputs.base }}
 
             - name: Lint Zsh
-              if: steps.detect.outputs.zsh == 'true'
+              if: steps.detect.outputs.zsh-scope != 'none'
               uses: ./actions/lint-zsh
+              with:
+                  base: ${{ steps.detect.outputs.base }}
 
             - name: Lint TOML
-              if: steps.detect.outputs.toml == 'true'
+              if: steps.detect.outputs.toml-scope != 'none'
               uses: ./actions/lint-toml
+              with:
+                  base: ${{ steps.detect.outputs.base }}
 
             - name: Lint YAML
-              if: steps.detect.outputs.yaml == 'true'
+              if: steps.detect.outputs.yaml-scope != 'none'
               uses: ./actions/lint-yaml
+              with:
+                  base: ${{ steps.detect.outputs.base }}
 
             - name: Lint EditorConfig
-              if: steps.detect.outputs.editorconfig == 'true'
+              if: steps.detect.outputs.editorconfig-scope != 'none'
               uses: ./actions/lint-editorconfig
+              with:
+                  base: ${{ steps.detect.outputs.base }}
 
             - name: Lint Em Dashes
+              if: steps.detect.outputs.emdash-scope != 'none'
               uses: ./actions/lint-emdash
+              with:
+                  base: ${{ steps.detect.outputs.base }}
 
     commitlint:
         permissions:

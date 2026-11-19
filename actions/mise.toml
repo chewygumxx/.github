@@ -21,7 +21,7 @@
 "aqua:koalaman/shellcheck"                       = "0.11.0"
 "aqua:mvdan/sh"                                  = "3.14.1"
 "aqua:rhysd/actionlint"                          = "1.7.12"
-"aqua:tombi-toml/tombi"                          = "1.5.5"
+"aqua:tombi-toml/tombi"                          = "1.11.3"
 
 # Not in the mise registry, so it comes from its GitHub releases.
 "github:ewhauser/shuck" = "0.2.3"

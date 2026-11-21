@@ -45,7 +45,7 @@ jobs:
                   persist-credentials: false
 
             - name: Setup Toolchain
-              uses: jdx/mise-action@v4
+              uses: jdx/mise-action@v5
 
             # bun.lock means Bun; package-lock.json means npm. Both, or
             # neither, is an error, not a guess.

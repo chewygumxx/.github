@@ -38,7 +38,7 @@ runs:
 
         - name: Setup mise
           if: steps.scope.outputs.scope != 'none'
-          uses: jdx/mise-action@v4
+          uses: jdx/mise-action@v5
           with:
               install: false
               add_shims_to_path: false

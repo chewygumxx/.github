@@ -20,17 +20,25 @@
 # The workflow runs against the working tree, uncommitted changes included,
 # since act copies it in place of `actions/checkout`.
 #
-# A repository references this file from its own `mise.toml`:
+# A repository references this file from a hidden task, and runs it through
+# a visible one that skips mise's cache, in its mise task configuration:
 #
 #   [settings]
-#   task.remote_no_cache = true
+#   experimental = true
 #
-#   [tasks.act]
-#   description = "Run CI locally with act"
+#   [act]
+#   extends = "cgxx:act"
+#
+#   [act-cached]
+#   description = "[Internal] Run CI locally with act"
 #   file        = "git::https://github.com/chewygumxx/.github.git//tasks/act?ref=v1"
+#   hide        = true
 #
-# mise otherwise keeps the first copy of a remote task for good, past any
-# move of v1; the setting refetches it only to list tasks or run this one.
+# The `cgxx:act` template, from @chewygumxx/mise-tasks-config, runs
+# `mise run --no-cache act-cached`, passing arguments on, so each run fetches
+# the task afresh past any move of v1. A repository without the template sets
+# `run = "mise run --no-cache act-cached"` on `act` itself. `git::` file tasks
+# are experimental: without the setting, mise warns and act never runs.
 #
 # mise reads `#MISE` headers only from tasks it discovers in a directory, not
 # from one named by `file`, so this script pins its own tools and runs them

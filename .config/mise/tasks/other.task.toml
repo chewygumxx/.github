@@ -1,0 +1,26 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+#:schema https://mise.jdx.dev/schema/mise-task.json
+
+#
+#
+# ~chewygumxx/.github.git
+# ::: :/.config/mise/tasks/other.task.toml
+#
+#
+
+#
+# https://mise.jdx.dev/tasks/task-configuration.html
+#
+#
+
+[commit]
+extends = "cgxx:commit"
+
+# Runs CI locally in Docker. The task is shared: callers reference
+# `tasks/act` at v1, and run `ci.yaml`; this repository's CI is `self-test`,
+# run against its own checkout.
+[act]
+description = "Run CI locally with act"
+file        = "tasks/act"
+env         = { ACT_WORKFLOW = "self-test.yaml" }

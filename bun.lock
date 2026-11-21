@@ -9,12 +9,13 @@
         "@chewygumxx/biome-config": "^1.0.0",
         "@chewygumxx/commitlint-config": "^1.1.0",
         "@chewygumxx/cz-commitlint": "^1.0.2",
+        "@chewygumxx/hk-config": "0.1.0",
         "@chewygumxx/markdownlint-cli2-config": "^1.1.0",
+        "@chewygumxx/mise-tasks-config": "0.1.0",
         "@chewygumxx/remark-preset": "^1.0.3",
         "@commitlint/cli": "^21.2.2",
         "@types/bun": "^1.4.2",
         "commitizen": "^4.3.2",
-        "husky": "^9.1.7",
         "markdownlint-cli2": "^0.23.3",
         "prettier": "^3.9.9",
         "remark-cli": "^12.0.1",
@@ -51,7 +52,11 @@
 
     "@chewygumxx/cz-commitlint": ["@chewygumxx/cz-commitlint@1.0.2", "", { "dependencies": { "@commitlint/cz-commitlint": "^21.2.3", "@commitlint/load": "^21.2.3", "@commitlint/types": "^21.2.3" }, "peerDependencies": { "commitizen": "^4.3.2", "inquirer": "^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0" } }, "sha512-MkyoPNHLA8JOQMJakC+s6XamOpYJBkp6EUQyFch4lDDWBC9WTBxAq1c7ZQIQNr8j46yrwliQIgfAFE0V3o77SA=="],
 
+    "@chewygumxx/hk-config": ["@chewygumxx/hk-config@0.1.0", "", { "peerDependencies": { "@arethetypeswrong/cli": "^0.18.5", "@biomejs/biome": "2.6.8", "cspell": "^10.3.6", "knip": "^6.40.0", "markdownlint-cli2": "^0.23.3", "prettier": "^3.9.9", "publint": "^0.3.25", "remark-cli": "^12.0.1", "secretlint": "^13.0.7", "sort-package-json": "^4.0.0", "sync-header-metadata": "^2.4.3", "typescript": "^7.0.2" }, "optionalPeers": ["@arethetypeswrong/cli", "@biomejs/biome", "cspell", "knip", "markdownlint-cli2", "prettier", "publint", "remark-cli", "secretlint", "sort-package-json", "sync-header-metadata", "typescript"], "bin": { "cgxx-lint-emdash": "bin/cgxx-lint-emdash", "cgxx-lint-packages": "bin/cgxx-lint-packages" } }, "sha512-TULowFseAdR4gRYybnHEbGXJZWYHHIhb23mwVX4qeSWan8vI0QcTLveVeiKYiNQ/h+LBqHqA0w3CGfwp8G3dbw=="],
+
     "@chewygumxx/markdownlint-cli2-config": ["@chewygumxx/markdownlint-cli2-config@1.1.0", "", { "peerDependencies": { "markdownlint-cli2": "^0.23.3" } }, "sha512-kkHjZ6IeCumPU0J3xECzdA6sGrq8eJTlLtMgTq+uiZTdolWFbwK6j1NCd3VC+W1JefC+2YGYpvmC7Vm9rioTFg=="],
+
+    "@chewygumxx/mise-tasks-config": ["@chewygumxx/mise-tasks-config@0.1.0", "", { "bin": { "cgxx-hk": "bin/cgxx-hk" } }, "sha512-JBes/OG/4CTU25NDN7J+6VYQQxxE/t0YKwxssOpi1i+CHrNcwj7ONwlCnPxLec3dp+CJtj+X55+j9rdprVTIrQ=="],
 
     "@chewygumxx/remark-preset": ["@chewygumxx/remark-preset@1.0.3", "", { "dependencies": { "remark-frontmatter": "^5.0.0", "remark-gfm": "^4.0.1", "remark-lint-maximum-line-length": "^4.1.1", "remark-lint-no-undefined-references": "^5.0.2", "remark-preset-lint-consistent": "^6.0.1", "remark-preset-lint-recommended": "^7.0.1" }, "peerDependencies": { "remark-cli": "^12.0.1" } }, "sha512-DVM+17zzlQIFjYaQQcJXzOyPq/cFFTkX56sSsDBLgWulpdXgPqACiyt03x3zId2YqrY7E7Hqdv/D2+2CWW1s7w=="],
 
@@ -386,8 +391,6 @@
     "homedir-polyfill": ["homedir-polyfill@1.0.3", "", { "dependencies": { "parse-passwd": "^1.0.0" } }, "sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA=="],
 
     "hosted-git-info": ["hosted-git-info@7.0.2", "", { "dependencies": { "lru-cache": "^10.0.1" } }, "sha512-puUZAUKT5m8Zzvs72XWy3HtvVbTWljRE66cP60bxJzAqf2DgICo7lYTY2IHUmLnNpjYvw5bvmoHvPc0QO2a62w=="],
-
-    "husky": ["husky@9.1.7", "", { "bin": { "husky": "bin.js" } }, "sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA=="],
 
     "iconv-lite": ["iconv-lite@0.7.3", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ=="],
 

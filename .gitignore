@@ -12,6 +12,11 @@
 *.local.*
 
 node_modules/
+
+# Linked by postinstall, not committed: GitHub's runner unpacks this
+# repository to run its actions, and fails on a symlink whose target,
+# in node_modules, it does not have.
+/.config/mise/conf.d/50-cgxx.toml
 /.herdr/
 /.claude/worktrees/
 

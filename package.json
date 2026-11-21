@@ -33,7 +33,8 @@
         "typescript": "^7.0.2"
     },
     "scripts": {
-        "check": "mise run check --all"
+        "check": "mise run check --all",
+        "postinstall": "mkdir -p .config/mise/conf.d && ln -sfn ../../../node_modules/@chewygumxx/mise-tasks-config/tasks.toml .config/mise/conf.d/50-cgxx.toml"
     },
     "config": {
         "commitizen": {

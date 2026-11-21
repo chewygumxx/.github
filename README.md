@@ -201,18 +201,29 @@ steps:
 `mise run act` runs a repository's CI workflow in Docker with
 [act](https://github.com/nektos/act), as a push of `HEAD` against the working
 tree, uncommitted changes included. Arguments pass through to act, such as
-`-j check` for one job. A repository adds the shared task to its `mise.toml`:
+`-j check` for one job. A repository references the shared task from a
+hidden task, and runs it through a visible one:
 
 ```toml
 [settings]
-task.remote_no_cache = true
+experimental = true
 
-[tasks.act]
-description = "Run CI locally with act"
+[act]
+extends = "cgxx:act"
+
+[act-cached]
+description = "[Internal] Run CI locally with act"
 file        = "git::https://github.com/chewygumxx/.github.git//tasks/act?ref=v1"
+hide        = true
 ```
 
-mise would otherwise keep its first copy of the task past any move of `v1`.
+The `cgxx:act` template, from
+[`@chewygumxx/mise-tasks-config`](https://www.npmjs.com/package/@chewygumxx/mise-tasks-config),
+runs `mise run --no-cache act-cached`, so each run fetches the task afresh;
+mise would otherwise keep its first copy past any move of `v1`. Without the
+template, give `act` that `run` itself. `git::` file tasks are experimental:
+without the setting, mise warns and act never runs.
+
 The task runs `.github/workflows/ci.yaml`, or the workflow `ACT_WORKFLOW`
 names; this repository runs `self-test.yaml` against its own checkout in place
 of `v1`. Set `ACT_GITHUB` to a local checkout of this repository to try a

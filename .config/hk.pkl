@@ -1,0 +1,89 @@
+// vim:set expandtab shiftwidth=4 filetype=pkl:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/.github.git
+// ::: :/.config/hk.pkl
+//
+//
+
+//
+// https://hk.jdx.dev/configuration
+//
+// The git hooks, and the check and fix hooks that `mise run lint` and
+// `mise run format` run. The steps come from @chewygumxx/hk-config, each
+// amended where this repository keeps its own configuration: yamllint
+// reads .yamllint.yaml, which extends the house style the shared actions
+// lint every caller with, editorconfig-checker skips indent size as those
+// actions do, remark reads package.json, and prettier its defaults. The workflows and shell scripts are linted by the
+// self-test workflow, through the actions themselves. `mise install`
+// installs the hooks; see [hooks] in .config/mise/config.toml.
+//
+
+amends "package://github.com/jdx/hk/releases/download/v2.13.0/hk@2.13.0#/Config.pkl"
+
+import "../node_modules/@chewygumxx/hk-config/steps.pkl" as shared
+
+local cgxx = (shared) {
+    extraInputs = List("actions/config/**", ".yamllint.yaml", "package.json")
+}
+
+local remark = (cgxx.remark) {
+    check = "bun run remark --frail --quiet --no-stdout {{files}}"
+}
+
+local prettier = (cgxx.prettier) {
+    check = "bun run prettier --check {{files}}"
+    fix = "bun run prettier --write --log-level warn {{files}}"
+}
+
+local yamllint = (cgxx.yamllint) {
+    env { ["YAMLLINT_CONFIG_FILE"] = ".yamllint.yaml" }
+}
+
+local editorconfig = (cgxx.editorconfig) {
+    check = "editorconfig-checker -disable-indent-size {{files}}"
+}
+
+hooks {
+    ["check"] {
+        steps {
+            ["biome"] = cgxx.biome
+            ["editorconfig"] = editorconfig
+            ["emdash"] = cgxx.emdash
+            ["markdownlint"] = cgxx.markdownlint
+            ["prettier"] = prettier
+            ["remark"] = remark
+            ["tombi"] = cgxx.tombi
+            ["tsc"] = cgxx.tsc
+            ["yamllint"] = yamllint
+        }
+    }
+    ["fix"] {
+        stage = false
+        steps {
+            ["biome"] = cgxx.biome
+            ["markdownlint"] = cgxx.markdownlint
+            ["prettier"] = prettier
+            ["tombi"] = cgxx.tombi
+        }
+    }
+    ["pre-commit"] {
+        stash = "git"
+        fix = false
+        stage = false
+        steps {
+            ["check"] {
+                check = "mise run check --staged"
+            }
+        }
+    }
+    ["commit-msg"] {
+        steps {
+            ["commitlint"] {
+                check = "mise run lint:commit \"{{ commit_msg_file }}\""
+            }
+        }
+    }
+}

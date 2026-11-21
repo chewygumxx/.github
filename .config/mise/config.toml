@@ -5,7 +5,7 @@
 #
 #
 # ~chewygumxx/.github.git
-# ::: :/mise.toml
+# ::: :/.config/mise/config.toml
 #
 #
 
@@ -17,7 +17,8 @@
 # Everything the repository runs that Bun does not install lives here, so
 # a checkout never depends on whatever the contributor happens to have on
 # `PATH`. Packages (commitlint, Biome, remark, markdownlint-cli2, prettier,
-# husky, TypeScript) are pinned in `package.json` and installed by Bun
+# TypeScript, the shared hk steps and task templates) are pinned in
+# `package.json` and installed by Bun
 # instead; together the two files are the whole dependency surface. CI
 # installs from this file via `jdx/mise-action`, so the versions below are the
 # ones CI runs.
@@ -38,6 +39,14 @@ min_version = "2026.9.0"
 #
 bun  = "1.4"
 node = "24"
+
+#
+# Hooks
+#
+# hk runs the git hooks, and the lint and format steps, from
+# `.config/hk.pkl`.
+#
+"aqua:jdx/hk" = "2.13.0"
 
 #
 # Utilities
@@ -74,11 +83,14 @@ node = "24"
 #
 "aqua:tombi-toml/tombi" = "1.11.3"
 
-[tasks.act]
-#
-# Runs CI locally in Docker. The task is shared: callers reference
-# `tasks/act` at v1, and run `ci.yaml`; this repository's CI is `self-test`.
-#
-description = "Run CI locally with act"
-file        = "tasks/act"
-env         = { ACT_WORKFLOW = "self-test.yaml" }
+[env]
+# A change to these makes lint and format select every file.
+CGXX_WIDEN_ON = "bun.lock .config .biome.json .editorconfig .markdownlint-cli2.jsonc .tombi.toml .yamllint.yaml actions/config"
+
+[hooks]
+# The hooks import the shared hk steps, which bun ci installs first. CI
+# installs the packages itself.
+postinstall = 'test -n "${CI-}" || { bun ci && hk install --mise; }'
+
+[task_config]
+includes = [ ".config/mise/tasks/*.task.toml" ]
